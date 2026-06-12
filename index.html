@@ -485,8 +485,19 @@
         padding: 0.25rem 0.45rem;
       }
 
-      .row.with-thumb {
-        grid-template-columns: auto auto 1fr auto;
+      .snap-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: 0.35rem;
+      }
+
+      .snap-row.with-thumb {
+        grid-template-columns: auto auto minmax(0, 1fr);
+      }
+
+      .snap-row .row-actions {
+        grid-column: 1 / -1;
+        flex-wrap: wrap;
+        justify-content: flex-start;
       }
 
       .thumb {
@@ -1602,6 +1613,50 @@
         link.remove();
       }
 
+      function captureAt(time) {
+        return new Promise((resolve) => {
+          if (!video.videoWidth || state.recording) {
+            resolve(null);
+            return;
+          }
+          const restore = video.currentTime;
+          const wasPaused = video.paused;
+          video.pause();
+          const onCaptured = () => {
+            video.removeEventListener("seeked", onCaptured);
+            const img = captureFrame();
+            const onRestored = () => {
+              video.removeEventListener("seeked", onRestored);
+              if (!wasPaused) video.play().catch(() => {});
+            };
+            video.addEventListener("seeked", onRestored);
+            video.currentTime = restore;
+            resolve(img);
+          };
+          video.addEventListener("seeked", onCaptured);
+          video.currentTime = Math.max(0, Math.min((video.duration || state.duration) - 0.05, time));
+        });
+      }
+
+      async function downloadSnapshotImage(index) {
+        const item = state.snapshots[index];
+        if (!item) return;
+        if (!item.img) {
+          $("#telemetryLog").textContent = "Захватываю кадр для скачивания…";
+          item.img = await captureAt(snapshotTime(item));
+          if (item.img) render();
+        }
+        if (item.img) {
+          downloadDataUrl(item.img, `${state.product}-frame-${Math.round(snapshotTime(item))}s.jpg`);
+          $("#telemetryLog").textContent = `Кадр скачан: ${item.title}`;
+        } else {
+          $("#telemetryLog").textContent =
+            location.protocol === "file:"
+              ? "Браузер блокирует захват кадров при открытии файла напрямую — откройте через локальный сервер (например: npx serve)"
+              : "Не удалось захватить кадр: видео ещё загружается или идёт запись клипа";
+        }
+      }
+
       function recordClip(lengthSeconds) {
         if (state.recording) return;
         // Compose video + marks on a canvas so annotations are burned into the clip.
@@ -1830,13 +1885,13 @@
           .map((item) => {
             const t = snapshotTime(item);
             return `
-              <div class="row${item.img ? " with-thumb" : ""}">
+              <div class="row snap-row${item.img ? " with-thumb" : ""}">
                 <span class="timecode">${formatDuration(t)}</span>
                 ${item.img ? `<img class="thumb" src="${item.img}" alt="" />` : ""}
                 <span class="row-title"><strong>${escapeHtml(item.title)}</strong><span>${item.meta}</span></span>
                 <span class="row-actions">
                   <button type="button" data-jump="${t.toFixed(1)}">Открыть</button>
-                  ${item.img ? `<button type="button" data-save-img="${item.index}" title="Скачать кадр в JPG">JPG</button>` : ""}
+                  <button type="button" data-save-img="${item.index}" title="Скачать этот кадр в формате JPG">Скачать JPG</button>
                   <button type="button" data-rename="snap:${item.index}" title="Переименовать" aria-label="Переименовать запись">✎</button>
                   <button type="button" data-delete="snap:${item.index}" title="Удалить" aria-label="Удалить запись">✕</button>
                 </span>
@@ -2069,10 +2124,7 @@
 
         const saveButton = event.target.closest("[data-save-img]");
         if (saveButton) {
-          const item = state.snapshots[Number(saveButton.dataset.saveImg)];
-          if (item && item.img) {
-            downloadDataUrl(item.img, `${state.product}-frame-${Math.round(snapshotTime(item))}s.jpg`);
-          }
+          downloadSnapshotImage(Number(saveButton.dataset.saveImg));
         }
       });
 
@@ -2142,6 +2194,12 @@
         range.step = "0.1";
         seekTo(state.duration * 0.66);
         render();
+      });
+      video.addEventListener("loadeddata", () => {
+        if (!captureFrame()) {
+          $("#telemetryLog").textContent =
+            "Внимание: захват кадров заблокирован (файл открыт напрямую). Для миниатюр и скачивания JPG откройте концепт через локальный сервер.";
+        }
       });
       video.addEventListener("timeupdate", renderTick);
       ["play", "pause", "ended", "seeked"].forEach((name) => video.addEventListener(name, renderTick));

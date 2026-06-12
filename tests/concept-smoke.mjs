@@ -61,6 +61,8 @@ includes("data-clear", "clear-all controls");
 includes("data-expand", "expand controls for video and sync panels");
 includes('id="expandBackdrop"', "expand backdrop element");
 includes("drawMarksOnCanvas", "marks burned into downloaded frames and clips");
+includes("Скачать JPG", "explicit frame download button");
+includes("captureAt", "on-demand frame recapture for downloads");
 record(
   fs.existsSync(path.join(root, "assets", "test-flight.mp4")),
   "test video asset exists",
