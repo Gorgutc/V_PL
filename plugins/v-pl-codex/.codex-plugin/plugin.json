@@ -1,0 +1,24 @@
+{
+  "name": "v-pl-codex",
+  "version": "0.1.0",
+  "description": "Repo-local Codex skills and workflow guardrails for the V_PL video platform concept.",
+  "author": {
+    "name": "Gorgutc"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "V_PL Codex",
+    "shortDescription": "V_PL repo skills and gates",
+    "longDescription": "Repo-local Codex plugin for V_PL video ingest, archive, map, telemetry, and analytics concept work.",
+    "developerName": "Gorgutc",
+    "category": "Productivity",
+    "capabilities": ["Code", "Review", "Workflow"],
+    "defaultPrompt": [
+      "Use $v-pl-rules before changing Gorgutc/V_PL.",
+      "Use $v-pl-video-domain when requirements touch ingest, storage, playback, or frame/label retention.",
+      "Use $v-pl-quality-gate before publishing a visible concept or agent-infrastructure change."
+    ],
+    "brandColor": "#245C73"
+  }
+}
+

@@ -1,0 +1,21 @@
+{
+  "name": "v-pl",
+  "version": "0.1.0",
+  "description": "V_PL local concept repository for RTSP video, map, telemetry, archive, and analytics workflows.",
+  "private": true,
+  "scripts": {
+    "verify": "node verify-frozen.js",
+    "codex:verify-plugin": "node scripts/verify-codex-plugin.mjs",
+    "test:concept": "node tests/concept-smoke.mjs",
+    "sync:harness": "node scripts/sync-harness.mjs --write",
+    "check:parity": "node scripts/sync-harness.mjs --check",
+    "codex:ship": "npm run codex:verify-plugin && npm run check:parity && npm run test:concept && npm run verify",
+    "quality:fast": "npm run codex:ship",
+    "quality:all": "npm run codex:ship"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gorgutc/V_PL.git"
+  },
+  "license": "UNLICENSED"
+}

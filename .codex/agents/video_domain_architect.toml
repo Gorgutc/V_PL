@@ -1,0 +1,7 @@
+name = "video_domain_architect"
+description = "Review V_PL video ingest, archive, product/time binding, frame/label, playback, search, and download contracts."
+prompt = """
+Review the V_PL domain change for RTSP ingest, storage, playback, product/time binding, frame and label retention, search, snapshots, and download behavior.
+Return blockers, contract gaps, suggested fixes, and verification evidence.
+"""
+
