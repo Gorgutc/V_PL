@@ -653,9 +653,10 @@
       }
 
       .bar-fill {
-        width: var(--value);
+        width: 0;
         height: 100%;
         background: linear-gradient(90deg, var(--green), var(--cyan));
+        transition: width 0.5s ease;
       }
 
       .mini-videos {
@@ -798,6 +799,148 @@
         top: -4px;
         border: 5px solid transparent;
         border-left: 8px solid var(--cyan);
+      }
+
+      /* Light, GPU-friendly animations: opacity/transform/box-shadow only. */
+      @keyframes panel-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @keyframes mark-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes pulse-live {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(143, 202, 110, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 0 0.3rem rgba(143, 202, 110, 0.06);
+        }
+      }
+
+      @keyframes pulse-cursor {
+        0%,
+        100% {
+          box-shadow:
+            0 0 0 0.35rem rgba(76, 201, 216, 0.15),
+            0 0 1.2rem rgba(76, 201, 216, 0.75);
+        }
+        50% {
+          box-shadow:
+            0 0 0 0.6rem rgba(76, 201, 216, 0.07),
+            0 0 1.6rem rgba(76, 201, 216, 0.5);
+        }
+      }
+
+      @keyframes expand-in {
+        from {
+          opacity: 0.4;
+          transform: scale(0.975);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .panel {
+        animation: panel-in 0.45s ease backwards;
+      }
+
+      .main-column > .panel {
+        animation-delay: 70ms;
+      }
+
+      .lower-row > .panel {
+        animation-delay: 150ms;
+      }
+
+      .side-column > .panel:nth-child(1) {
+        animation-delay: 110ms;
+      }
+
+      .side-column > .panel:nth-child(2) {
+        animation-delay: 190ms;
+      }
+
+      .side-column > .panel:nth-child(3) {
+        animation-delay: 270ms;
+      }
+
+      .panel.expanded {
+        animation: expand-in 0.22s ease;
+      }
+
+      #expandBackdrop {
+        animation: mark-in 0.2s ease;
+      }
+
+      button,
+      select,
+      input[type="date"] {
+        transition:
+          border-color 0.18s ease,
+          background-color 0.18s ease,
+          transform 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      .row {
+        transition: background-color 0.15s ease;
+      }
+
+      .row:hover {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .thumb {
+        transition: transform 0.18s ease;
+      }
+
+      .row:hover .thumb {
+        transform: scale(1.06);
+      }
+
+      .dot.live {
+        animation: pulse-live 2.4s ease-in-out infinite;
+      }
+
+      #mapCursor {
+        animation: pulse-cursor 2.2s ease-in-out infinite;
+      }
+
+      #userMarks .annotation {
+        animation: mark-in 0.25s ease;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
       }
 
       @media (max-width: 1180px) {
@@ -1274,7 +1417,14 @@
             <div class="button-row">
               <button type="button" data-action="download-product-video">Скачать всё</button>
               <button type="button" data-action="download-selected-clip">Скачать клип</button>
-              <button class="danger wide" type="button" data-action="replay-last-minute">Последняя минута</button>
+              <button
+                class="danger wide"
+                type="button"
+                data-action="download-last-minute"
+                title="Скачать последнюю минуту видео до финиша"
+              >
+                Скачать последнюю минуту
+              </button>
             </div>
           </div>
         </aside>
@@ -1827,17 +1977,26 @@
           ["Высота", telemetryValue(54, 18), "%"],
           ["Качество", telemetryValue(81, 9), "%"],
         ];
-        $("#telemetryBars").innerHTML = values
-          .map(
-            ([name, value, unit]) => `
+        const host = $("#telemetryBars");
+        // Update bars in place so the width transition animates between ticks.
+        if (host.childElementCount !== values.length) {
+          host.innerHTML = values
+            .map(
+              ([name]) => `
               <div class="bar-row">
                 <span>${name}</span>
-                <div class="bar-track"><div class="bar-fill" style="--value: ${value}%"></div></div>
-                <span>${value}${unit}</span>
+                <div class="bar-track"><div class="bar-fill"></div></div>
+                <span class="bar-value"></span>
               </div>
             `,
-          )
-          .join("");
+            )
+            .join("");
+        }
+        values.forEach(([name, value, unit], index) => {
+          const rowEl = host.children[index];
+          rowEl.querySelector(".bar-fill").style.width = `${value}%`;
+          rowEl.querySelector(".bar-value").textContent = `${value}${unit}`;
+        });
       }
 
       function snapshotTime(item) {
@@ -2042,6 +2201,22 @@
         if (action === "download-selected-clip") {
           recordClip(5);
         }
+        if (action === "download-last-minute") {
+          downloadLastMinute();
+        }
+      }
+
+      function downloadLastMinute() {
+        if (state.recording) return;
+        const windowSec = 60;
+        if (state.duration <= windowSec + 1) {
+          downloadDataUrl(video.currentSrc, `${state.product}-last-minute.mp4`);
+          $("#telemetryLog").textContent = "Последняя минута: ролик короче минуты — скачан целиком";
+          return;
+        }
+        // Longer source: jump to the final minute and record it in real time.
+        seekTo(Math.max(0, state.duration - windowSec));
+        recordClip(windowSec);
       }
 
       function startRename(button) {

@@ -63,6 +63,8 @@ includes('id="expandBackdrop"', "expand backdrop element");
 includes("drawMarksOnCanvas", "marks burned into downloaded frames and clips");
 includes("Скачать JPG", "explicit frame download button");
 includes("captureAt", "on-demand frame recapture for downloads");
+includes('data-action="download-last-minute"', "last minute download action");
+includes("prefers-reduced-motion", "reduced motion support");
 record(
   fs.existsSync(path.join(root, "assets", "test-flight.mp4")),
   "test video asset exists",
