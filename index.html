@@ -1265,7 +1265,7 @@
               </div>
               <div class="panel-body">
                 <div class="map-grid">
-                  <div class="map-frame" title="Клик по траектории перематывает видео">
+                  <div class="map-frame" title="Клик — перемотка, двойной клик — своё событие">
                     <canvas id="mapCanvas" width="780" height="460" aria-label="Синтетическая карта маршрута"></canvas>
                     <div id="mapCursor" aria-hidden="true"></div>
                     <div class="map-legend">
@@ -1277,7 +1277,7 @@
                   <div class="event-block">
                     <div class="panel-title" style="margin-bottom: 0.45rem">
                       <h3>События маршрута</h3>
-                      <p class="subtle">Клик по карте и событиям двигает таймлайн</p>
+                      <p class="subtle">Клик — переход, двойной клик по карте — своё событие</p>
                     </div>
                     <div class="event-list" id="eventList"></div>
                   </div>
@@ -1609,6 +1609,16 @@
           ctx.arc(x, y, 6, 0, Math.PI * 2);
           ctx.fill();
         });
+
+        ctx.fillStyle = "#8fca6e";
+        state.snapshots.forEach((item) => {
+          const p = Math.max(0, Math.min(1, snapshotTime(item) / Math.max(1, state.duration)));
+          const x = (0.12 + p * 0.74) * w;
+          const y = (0.76 - p * 0.43 + Math.sin(p * Math.PI * 3) * 0.07) * h;
+          ctx.beginPath();
+          ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
       }
 
       function renderTelemetry() {
@@ -1918,13 +1928,29 @@
         $("#telemetryLog").textContent = `Найдено сегментов: ${$("#clipCount").textContent} (${state.product}, ${areas[state.area]}, ${state.date})`;
       });
 
-      $("#mapCanvas").addEventListener("click", (event) => {
+      function mapClickProgress(event) {
         const frame = event.currentTarget.getBoundingClientRect();
         const xPercent = ((event.clientX - frame.left) / frame.width) * 100;
         // Inverse of the route cursor mapping in renderMapCanvas: x% = 12 + progress * 74.
-        const progress = Math.max(0, Math.min(1, (xPercent - 12) / 74));
+        return Math.max(0, Math.min(1, (xPercent - 12) / 74));
+      }
+
+      $("#mapCanvas").addEventListener("click", (event) => {
         state.reviewMode = "live";
-        seekTo(progress * state.duration);
+        seekTo(mapClickProgress(event) * state.duration);
+      });
+
+      $("#mapCanvas").addEventListener("dblclick", (event) => {
+        const progress = mapClickProgress(event);
+        state.events.push({
+          at: progress,
+          title: `Событие ${state.events.length + 1}`,
+          meta: "пользовательское событие",
+          user: true,
+        });
+        state.events.sort((a, b) => a.at - b.at);
+        render();
+        $("#telemetryLog").textContent = `Событие добавлено на ${formatDuration(progress * state.duration)}`;
       });
 
       video.addEventListener("loadedmetadata", () => {

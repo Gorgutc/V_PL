@@ -54,6 +54,8 @@ includes("MediaRecorder", "media recorder clip export");
 includes('id="userMarks"', "user-placed marks layer");
 includes("data-rename", "rename controls for frames and events");
 includes('$("#videoPlayer").addEventListener("click"', "click-to-place label on video");
+includes('$("#mapCanvas").addEventListener("dblclick"', "double-click creates route event");
+includes("пользовательское событие", "user-created event marker");
 record(
   fs.existsSync(path.join(root, "assets", "test-flight.mp4")),
   "test video asset exists",
