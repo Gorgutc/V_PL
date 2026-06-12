@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/session-start.js",
+            "timeout": 5,
+            "statusMessage": "Loading V_PL context"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .codex/hooks/user-prompt-nudge.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

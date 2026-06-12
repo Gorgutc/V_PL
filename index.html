@@ -1,0 +1,2404 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>V_PL — видеоконсоль (концепт)</title>
+    <meta
+      name="description"
+      content="Локальный HTML-концепт: синхронное RTSP-видео, карта, телеметрия, поиск по архиву, снимки и видеоаналитика."
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101214;
+        --surface: #171a1d;
+        --surface-2: #1d2225;
+        --surface-3: #242a2e;
+        --line: #343c41;
+        --line-strong: #516069;
+        --text: #edf1f2;
+        --muted: #aab4b8;
+        --dim: #748187;
+        --cyan: #4cc9d8;
+        --green: #8fca6e;
+        --amber: #d6a451;
+        --red: #dc6f6a;
+        --violet: #b6a1e6;
+        --focus: #f0d36e;
+        --radius: 8px;
+        --shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 34rem),
+          var(--bg);
+        color: var(--text);
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button,
+      select,
+      input[type="date"] {
+        min-height: 2.375rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface-2);
+        color: var(--text);
+      }
+
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.55rem 0.8rem;
+        cursor: pointer;
+      }
+
+      button:hover,
+      select:hover,
+      input[type="date"]:hover {
+        border-color: var(--line-strong);
+      }
+
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: minmax(16rem, 1fr) auto auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--line);
+        background: rgba(16, 18, 20, 0.94);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .brand-copy {
+        min-width: 0;
+      }
+
+      .brand-mark {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 8px;
+        border: 1px solid rgba(76, 201, 216, 0.45);
+        background:
+          linear-gradient(135deg, rgba(76, 201, 216, 0.22), rgba(143, 202, 110, 0.16)),
+          var(--surface-2);
+        display: grid;
+        place-items: center;
+        color: var(--cyan);
+        font-weight: 800;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 1rem;
+        letter-spacing: 0;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 0.82rem;
+        overflow-wrap: anywhere;
+      }
+
+      .status-strip,
+      .sync-strip {
+        display: flex;
+        gap: 0.45rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 1.7rem;
+        padding: 0.25rem 0.55rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.025);
+        font-size: 0.78rem;
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: var(--dim);
+      }
+
+      .dot.live {
+        background: var(--green);
+        box-shadow: 0 0 0 0.25rem rgba(143, 202, 110, 0.12);
+      }
+
+      .dot.warn {
+        background: var(--amber);
+      }
+
+      .dot.sync {
+        background: var(--cyan);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(18rem, 22rem) minmax(0, 1.45fr) minmax(20rem, 0.95fr);
+        gap: 0.85rem;
+        padding: 0.85rem;
+      }
+
+      .panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.75rem 0.85rem;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-title {
+        display: grid;
+        gap: 0.12rem;
+        min-width: 0;
+      }
+
+      .panel-title h2,
+      .panel-title h3 {
+        font-size: 0.88rem;
+        letter-spacing: 0;
+      }
+
+      .panel-body {
+        padding: 0.85rem;
+      }
+
+      .control-stack {
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .field {
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+
+      select,
+      input[type="date"] {
+        width: 100%;
+        min-width: 0;
+        padding: 0.45rem 0.55rem;
+      }
+
+      .button-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+
+      .button-row.single {
+        grid-template-columns: 1fr;
+      }
+
+      .button-row .wide {
+        grid-column: 1 / -1;
+      }
+
+      .primary {
+        border-color: rgba(76, 201, 216, 0.55);
+        background: rgba(76, 201, 216, 0.12);
+        color: #dffaff;
+      }
+
+      .danger {
+        border-color: rgba(220, 111, 106, 0.5);
+        background: rgba(220, 111, 106, 0.09);
+        color: #ffe1df;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+
+      .metric {
+        min-height: 4.25rem;
+        display: grid;
+        align-content: space-between;
+        gap: 0.4rem;
+        padding: 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--surface-2);
+      }
+
+      .metric strong {
+        font-size: 1.05rem;
+      }
+
+      .metric span {
+        color: var(--muted);
+        font-size: 0.74rem;
+      }
+
+      .main-column {
+        display: grid;
+        gap: 0.85rem;
+        min-width: 0;
+      }
+
+      .video-panel .panel-body {
+        padding: 0;
+      }
+
+      .video-stage {
+        position: relative;
+        min-height: clamp(22rem, 48vh, 34rem);
+        background: #080a0b;
+        overflow: hidden;
+      }
+
+      #mapCanvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #videoPlayer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+        cursor: crosshair;
+      }
+
+      #annotationLayer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .annotation {
+        position: absolute;
+        display: grid;
+        gap: 0.25rem;
+        transform: translate(-50%, -50%);
+      }
+
+      .annotation::before {
+        content: "";
+        width: 4.4rem;
+        height: 2.75rem;
+        border: 1px solid var(--amber);
+        border-radius: 4px;
+        box-shadow: 0 0 0 1px rgba(214, 164, 81, 0.18);
+      }
+
+      .annotation span {
+        color: #ffe9bd;
+        font-size: 0.72rem;
+        text-shadow: 0 1px 2px #000;
+      }
+
+      .video-overlay {
+        position: absolute;
+        left: 0.8rem;
+        right: 0.8rem;
+        bottom: 0.8rem;
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .video-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .timeline {
+        padding: 0.65rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 7px;
+        background: rgba(16, 18, 20, 0.78);
+        backdrop-filter: blur(12px);
+      }
+
+      .timeline-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.45rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--cyan);
+      }
+
+      .transport {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      .transport button {
+        min-width: 2.75rem;
+      }
+
+      .map-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(15rem, 0.85fr);
+        gap: 0.85rem;
+      }
+
+      .map-frame {
+        position: relative;
+        min-height: 20rem;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #141815;
+        overflow: hidden;
+      }
+
+      #mapCanvas {
+        position: absolute;
+        inset: 0;
+      }
+
+      #mapCursor {
+        position: absolute;
+        left: 48%;
+        top: 44%;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: var(--cyan);
+        border: 2px solid #071013;
+        box-shadow:
+          0 0 0 0.35rem rgba(76, 201, 216, 0.15),
+          0 0 1.2rem rgba(76, 201, 216, 0.75);
+        transform: translate(-50%, -50%);
+      }
+
+      .map-legend {
+        position: absolute;
+        left: 0.7rem;
+        bottom: 0.7rem;
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+      }
+
+      .event-list,
+      .archive-list,
+      .snapshot-list,
+      .analytics-list {
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 0.55rem;
+        align-items: center;
+        min-height: 2.75rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .row button {
+        min-height: 2rem;
+        padding: 0.25rem 0.45rem;
+      }
+
+      .row.snap-row {
+        grid-template-columns: auto minmax(0, 1fr);
+        row-gap: 0.5rem;
+        padding: 0.65rem 0 0.85rem;
+      }
+
+      .row.snap-row.with-thumb {
+        grid-template-columns: auto auto minmax(0, 1fr);
+      }
+
+      .snap-row .row-actions {
+        grid-column: 1 / -1;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+
+      .row-title strong[data-rename] {
+        cursor: text;
+      }
+
+      .row-title strong[data-rename]:hover,
+      .row-title strong[data-rename]:focus-visible {
+        text-decoration: underline dotted;
+        text-decoration-color: var(--dim);
+        text-underline-offset: 3px;
+      }
+
+      .thumb {
+        width: 3.4rem;
+        height: 1.95rem;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+      }
+
+      .row-actions {
+        display: flex;
+        gap: 0.3rem;
+      }
+
+      .header-tools {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+      }
+
+      .icon-button {
+        min-height: 1.9rem;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .block-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .panel.expanded {
+        position: fixed;
+        inset: 1.25rem;
+        z-index: 60;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+      }
+
+      .panel.expanded .panel-body {
+        display: grid;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .panel.expanded .video-stage {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .sync-panel.expanded .panel-body {
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 0.6rem;
+      }
+
+      .panel.expanded .mini-videos,
+      .panel.expanded .mini-video {
+        height: 100%;
+        min-height: 0;
+      }
+
+      #expandBackdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: rgba(8, 10, 11, 0.72);
+        backdrop-filter: blur(2px);
+      }
+
+      #expandBackdrop[hidden] {
+        display: none;
+      }
+
+      .timecode {
+        color: var(--cyan);
+        font-variant-numeric: tabular-nums;
+        font-size: 0.78rem;
+      }
+
+      .row-title {
+        display: grid;
+        gap: 0.1rem;
+        min-width: 0;
+      }
+
+      .row-title strong {
+        font-size: 0.82rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .row-title span {
+        color: var(--muted);
+        font-size: 0.74rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .side-column {
+        display: grid;
+        gap: 0.85rem;
+        align-content: start;
+        min-width: 0;
+      }
+
+      .telemetry-card {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      #telemetryBars {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 5.2rem 1fr 3.5rem;
+        gap: 0.55rem;
+        align-items: center;
+        font-size: 0.78rem;
+      }
+
+      .bar-track {
+        height: 0.55rem;
+        border-radius: 999px;
+        background: var(--surface-3);
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        width: 0;
+        height: 100%;
+        background: linear-gradient(90deg, var(--green), var(--cyan));
+        transition: width 0.5s ease;
+      }
+
+      .mini-videos {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.55rem;
+      }
+
+      .mini-video {
+        position: relative;
+        min-height: 6.75rem;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background:
+          linear-gradient(135deg, rgba(76, 201, 216, 0.1), transparent 45%),
+          linear-gradient(25deg, #262a21, #121619 55%, #2a201d);
+        overflow: hidden;
+      }
+
+      .mini-video video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .mini-video span {
+        position: absolute;
+        left: 0.5rem;
+        right: 0.5rem;
+        bottom: 0.45rem;
+        color: var(--text);
+        font-size: 0.72rem;
+        text-shadow: 0 1px 2px #000;
+      }
+
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+
+      .analytics-item {
+        min-height: 4.7rem;
+        display: grid;
+        align-content: space-between;
+        gap: 0.3rem;
+        padding: 0.65rem;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--surface-2);
+      }
+
+      .analytics-item strong {
+        font-size: 0.82rem;
+      }
+
+      .analytics-item span {
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+
+      .log-line {
+        min-height: 1.5rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .archive-list,
+      .event-list,
+      .snapshot-list {
+        /* In a scrollable grid, auto tracks can collapse to the row's min-height;
+           size them by content so two-line rows never overlap. */
+        grid-auto-rows: max-content;
+        scrollbar-width: thin;
+        scrollbar-color: var(--line-strong) transparent;
+        overscroll-behavior: contain;
+      }
+
+      .snapshot-list {
+        max-height: 16rem;
+        overflow-y: auto;
+      }
+
+      .lower-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(13rem, 0.6fr);
+        gap: 0.85rem;
+        min-width: 0;
+      }
+
+      .map-frame {
+        cursor: crosshair;
+      }
+
+      #mapCursor {
+        pointer-events: none;
+      }
+
+      .annotation--friendly::before {
+        border-color: var(--green);
+        box-shadow: 0 0 0 1px rgba(143, 202, 110, 0.18);
+      }
+
+      .annotation--friendly span {
+        color: #d9f3c8;
+      }
+
+      .annotation--user::before {
+        border-color: var(--cyan);
+        box-shadow: 0 0 0 1px rgba(76, 201, 216, 0.2);
+      }
+
+      .annotation--user span {
+        color: #d2f4f8;
+      }
+
+      .rename-input {
+        width: 100%;
+        min-height: 1.5rem;
+        padding: 0.05rem 0.3rem;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+        background: var(--surface-2);
+        color: var(--text);
+        font-size: 0.82rem;
+      }
+
+      .annotation--direction {
+        position: absolute;
+        width: 3.2rem;
+        height: 2px;
+        background: var(--cyan);
+        transform: translate(-50%, -50%) rotate(var(--bearing, 0deg));
+        transform-origin: center;
+      }
+
+      .annotation--direction::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -4px;
+        border: 5px solid transparent;
+        border-left: 8px solid var(--cyan);
+      }
+
+      /* Light, GPU-friendly animations: opacity/transform/box-shadow only. */
+      @keyframes panel-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @keyframes mark-in {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes pulse-live {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(143, 202, 110, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 0 0.3rem rgba(143, 202, 110, 0.06);
+        }
+      }
+
+      @keyframes pulse-cursor {
+        0%,
+        100% {
+          box-shadow:
+            0 0 0 0.35rem rgba(76, 201, 216, 0.15),
+            0 0 1.2rem rgba(76, 201, 216, 0.75);
+        }
+        50% {
+          box-shadow:
+            0 0 0 0.6rem rgba(76, 201, 216, 0.07),
+            0 0 1.6rem rgba(76, 201, 216, 0.5);
+        }
+      }
+
+      @keyframes expand-in {
+        from {
+          opacity: 0.4;
+          transform: scale(0.975);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .panel {
+        animation: panel-in 0.45s ease backwards;
+      }
+
+      .main-column > .panel {
+        animation-delay: 70ms;
+      }
+
+      .lower-row > .panel {
+        animation-delay: 150ms;
+      }
+
+      .side-column > .panel:nth-child(1) {
+        animation-delay: 110ms;
+      }
+
+      .side-column > .panel:nth-child(2) {
+        animation-delay: 190ms;
+      }
+
+      .side-column > .panel:nth-child(3) {
+        animation-delay: 270ms;
+      }
+
+      .panel.expanded {
+        animation: expand-in 0.22s ease;
+      }
+
+      #expandBackdrop {
+        animation: mark-in 0.2s ease;
+      }
+
+      button,
+      select,
+      input[type="date"] {
+        transition:
+          border-color 0.18s ease,
+          background-color 0.18s ease,
+          transform 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0) scale(0.98);
+      }
+
+      .row {
+        transition: background-color 0.15s ease;
+      }
+
+      .row:hover {
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .thumb {
+        transition: transform 0.18s ease;
+      }
+
+      .row:hover .thumb {
+        transform: scale(1.06);
+      }
+
+      .dot.live {
+        animation: pulse-live 2.4s ease-in-out infinite;
+      }
+
+      #mapCursor {
+        animation: pulse-cursor 2.2s ease-in-out infinite;
+      }
+
+      #userMarks .annotation {
+        animation: mark-in 0.25s ease;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+
+      @media (max-width: 1180px) {
+        .workspace {
+          grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+        }
+
+        .side-column {
+          grid-column: 1 / -1;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 860px) {
+        .topbar {
+          grid-template-columns: 1fr;
+        }
+
+        .workspace,
+        .map-grid,
+        .side-column,
+        .lower-row {
+          grid-template-columns: 1fr;
+        }
+
+        .video-stage {
+          min-height: 24rem;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .workspace {
+          padding: 0.55rem;
+        }
+
+        .button-row,
+        .metric-grid,
+        .analytics-grid,
+        .mini-videos {
+          grid-template-columns: 1fr;
+        }
+
+        .bar-row {
+          grid-template-columns: 4.5rem 1fr 3rem;
+        }
+
+        .brand {
+          align-items: flex-start;
+        }
+
+        .brand-mark {
+          flex: 0 0 auto;
+        }
+
+        h1 {
+          font-size: 0.94rem;
+          overflow-wrap: anywhere;
+        }
+      }
+
+      /* Single-screen lock: desktop widths keep the whole console inside one viewport. */
+      @media (min-width: 1181px) {
+        html,
+        body {
+          height: 100%;
+          overflow: hidden;
+        }
+
+        .app-shell {
+          height: 100vh;
+          height: 100dvh;
+          min-height: 0;
+          grid-template-rows: auto minmax(0, 1fr);
+          overflow: hidden;
+        }
+
+        .topbar {
+          padding: 0.6rem 1rem;
+        }
+
+        .workspace {
+          height: 100%;
+          min-height: 0;
+          width: 100%;
+          max-width: 150rem;
+          margin-inline: auto;
+          grid-template-columns: minmax(17rem, 21rem) minmax(0, 1.5fr) minmax(19rem, 23rem);
+          grid-template-rows: minmax(0, 1fr);
+          padding: 0.75rem;
+          gap: 0.75rem;
+        }
+
+        .panel {
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          min-height: 0;
+        }
+
+        .panel-header {
+          padding: 0.45rem 0.85rem;
+        }
+
+        .panel-body {
+          min-height: 0;
+          overflow: hidden;
+        }
+
+        .control-stack {
+          height: 100%;
+          grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+          gap: 0.75rem;
+        }
+
+        .archive-block,
+        .event-block {
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          min-height: 0;
+        }
+
+        .archive-list,
+        .event-list,
+        .snapshot-list {
+          overflow-y: auto;
+          min-height: 0;
+          align-content: start;
+        }
+
+        .snapshot-list {
+          max-height: none;
+        }
+
+        .metric {
+          min-height: 3.4rem;
+          padding: 0.5rem 0.6rem;
+        }
+
+        .main-column {
+          height: 100%;
+          min-height: 0;
+          grid-template-rows: minmax(0, 1.6fr) minmax(0, 1fr);
+          gap: 0.75rem;
+        }
+
+        .video-panel .panel-body {
+          display: grid;
+        }
+
+        .video-stage {
+          min-height: 0;
+          height: 100%;
+        }
+
+        .lower-row {
+          min-height: 0;
+          grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.4fr);
+          gap: 0.75rem;
+        }
+
+        .map-grid {
+          height: 100%;
+          min-height: 0;
+          grid-template-rows: minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1.2fr) minmax(11rem, 0.8fr);
+          gap: 0.75rem;
+        }
+
+        .map-frame {
+          min-height: 0;
+        }
+
+        .snapshots-panel .panel-body {
+          display: grid;
+        }
+
+        .side-column {
+          height: 100%;
+          min-height: 0;
+          align-content: stretch;
+          grid-template-rows: auto minmax(min-content, 1fr) minmax(min-content, 1fr);
+          gap: 0.75rem;
+        }
+
+        .sync-panel .panel-body {
+          display: grid;
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 0.6rem;
+        }
+
+        .mini-video {
+          min-height: 4rem;
+          height: 100%;
+        }
+
+        .analytics-list {
+          display: grid;
+          grid-template-rows: minmax(0, 1fr);
+        }
+
+        .analytics-grid {
+          height: 100%;
+          grid-template-rows: repeat(3, minmax(0, 1fr));
+        }
+
+        .analytics-item {
+          min-height: 3rem;
+          padding: 0.5rem 0.6rem;
+        }
+
+        .analytics-item span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      /* Compact density for 768p-class screens while staying locked to one viewport. */
+      @media (min-width: 1181px) and (max-height: 760px) {
+        .topbar {
+          padding: 0.35rem 1rem;
+        }
+
+        .workspace {
+          padding: 0.5rem;
+          gap: 0.5rem;
+        }
+
+        .main-column,
+        .side-column,
+        .control-stack,
+        .map-grid,
+        .lower-row {
+          gap: 0.5rem;
+        }
+
+        .panel-header {
+          padding: 0.35rem 0.75rem;
+        }
+
+        .panel-header .subtle {
+          display: none;
+        }
+
+        .panel-body {
+          padding: 0.5rem 0.6rem;
+        }
+
+        button,
+        select,
+        input[type="date"] {
+          min-height: 2rem;
+        }
+
+        button {
+          padding: 0.35rem 0.6rem;
+        }
+
+        label {
+          font-size: 0.7rem;
+        }
+
+        select,
+        input[type="date"] {
+          padding: 0.3rem 0.5rem;
+        }
+
+        .field-grid {
+          gap: 0.4rem;
+        }
+
+        .field {
+          gap: 0.25rem;
+        }
+
+        .metric {
+          min-height: 2.6rem;
+          padding: 0.4rem 0.5rem;
+          gap: 0.2rem;
+        }
+
+        .metric strong {
+          font-size: 0.95rem;
+        }
+
+        .metric span {
+          font-size: 0.68rem;
+        }
+
+        .control-stack > .button-row:last-child button {
+          font-size: 0.76rem;
+          padding: 0.3rem 0.4rem;
+        }
+
+        .row {
+          min-height: 2.25rem;
+          padding: 0.4rem 0;
+        }
+
+        .row button {
+          min-height: 1.75rem;
+        }
+
+        .telemetry-card {
+          gap: 0.45rem;
+        }
+
+        #telemetryBars {
+          gap: 0.4rem;
+        }
+
+        .log-line {
+          min-height: 1rem;
+          font-size: 0.72rem;
+        }
+
+        .mini-video {
+          min-height: 3rem;
+        }
+
+        .analytics-item {
+          min-height: 2.6rem;
+          padding: 0.4rem 0.5rem;
+          gap: 0.2rem;
+        }
+
+        .video-overlay {
+          left: 0.6rem;
+          right: 0.6rem;
+          bottom: 0.6rem;
+          gap: 0.4rem;
+        }
+
+        .timeline {
+          padding: 0.45rem 0.55rem;
+        }
+
+        .timeline-top {
+          margin-bottom: 0.3rem;
+        }
+
+        .transport button {
+          min-height: 1.9rem;
+        }
+      }
+
+      /* Below ~600px of height the lock cannot physically hold; release to page scroll. */
+      @media (min-width: 1181px) and (max-height: 600px) {
+        html,
+        body {
+          overflow: auto;
+        }
+
+        .app-shell {
+          height: auto;
+          min-height: 100vh;
+          overflow: visible;
+        }
+
+        .workspace,
+        .main-column,
+        .side-column,
+        .control-stack {
+          height: auto;
+        }
+
+        .main-column {
+          grid-template-rows: auto auto;
+        }
+
+        .side-column {
+          grid-template-rows: auto auto auto;
+        }
+
+        .video-stage {
+          min-height: 16rem;
+        }
+
+        .map-frame {
+          min-height: 11rem;
+        }
+
+        .archive-list,
+        .event-list,
+        .snapshot-list {
+          max-height: 11rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell" data-app="v-pl-video-console">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">V</div>
+          <div class="brand-copy">
+            <h1>V_PL / видео, маршрут, телеметрия</h1>
+            <p class="subtle">RTSP → эфир → архив → синхронный просмотр</p>
+          </div>
+        </div>
+        <div class="status-strip" aria-label="Статусы сервисов">
+          <span class="pill"><span class="dot live"></span>RTSP эфир</span>
+          <span class="pill"><span class="dot sync"></span>GeoServer готов</span>
+          <span class="pill"><span class="dot warn"></span>Очередь аналитики</span>
+        </div>
+        <div class="sync-strip">
+          <span class="pill">Общее время <strong id="sharedClock">12:42:18.240</strong></span>
+          <button class="primary" type="button" data-action="toggle-sync" id="syncButton">Синхр. вкл</button>
+        </div>
+      </header>
+
+      <section class="workspace" aria-label="V_PL video console workspace">
+        <aside class="panel" data-panel="archive-search">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Поиск и контекст</h2>
+              <p class="subtle">Область / дата / изделие</p>
+            </div>
+          </div>
+          <div class="panel-body control-stack">
+            <div class="field-grid">
+              <div class="field">
+                <label for="productSelect">Изделие</label>
+                <select id="productSelect">
+                  <option value="VP-104">VP-104 / активный маршрут</option>
+                  <option value="VP-217">VP-217 / архивный проход</option>
+                  <option value="VP-319">VP-319 / синхронный обзор</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="areaSelect">Область</label>
+                <select id="areaSelect">
+                  <option value="north">Северный сектор / 12.4 км²</option>
+                  <option value="east">Восточный коридор / 8.7 км²</option>
+                  <option value="delta">Дельта-участок / 5.1 км²</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="dateSelect">Дата</label>
+                <input id="dateSelect" type="date" value="2026-06-12" />
+              </div>
+            </div>
+
+            <div class="button-row single">
+              <button class="primary" type="button" id="searchButton">Найти видео</button>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric">
+                <span>Фрагменты</span>
+                <strong id="clipCount">18</strong>
+              </div>
+              <div class="metric">
+                <span>Метки</span>
+                <strong id="labelCount">7</strong>
+              </div>
+              <div class="metric">
+                <span>Кадры</span>
+                <strong id="snapshotCount">4</strong>
+              </div>
+              <div class="metric">
+                <span>Рассинхрон</span>
+                <strong id="syncDrift">+0.08с</strong>
+              </div>
+            </div>
+
+            <div class="archive-block">
+              <div class="panel-title" style="margin-bottom: 0.45rem">
+                <h3>Найденные видео</h3>
+                <p class="subtle" id="searchSummary">VP-104, северный сектор, 12 июня</p>
+              </div>
+              <div class="archive-list" id="archiveList" aria-live="polite"></div>
+            </div>
+
+            <div class="button-row">
+              <button type="button" data-action="download-product-video">Скачать всё</button>
+              <button type="button" data-action="download-selected-clip">Скачать клип</button>
+              <button
+                class="danger wide"
+                type="button"
+                data-action="download-last-minute"
+                title="Скачать последнюю минуту видео до финиша"
+              >
+                Скачать последнюю минуту
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <section class="main-column">
+          <section class="panel video-panel" data-panel="live-video">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h2 id="videoTitle">Эфир / VP-104</h2>
+                <p class="subtle" id="videoSubtitle">RTSP-источник привязан к изделию, времени и маршруту</p>
+              </div>
+              <span class="header-tools">
+                <span class="pill"><span class="dot live"></span><span id="streamState">эфир 25 к/с</span></span>
+                <button type="button" class="icon-button" data-expand title="Развернуть/свернуть" aria-label="Развернуть видео">⛶</button>
+              </span>
+            </div>
+            <div class="panel-body">
+              <div class="video-stage">
+                <!-- Test footage: Sintel trailer (c) Blender Foundation, CC BY 3.0 (media.w3.org) -->
+                <video
+                  id="videoPlayer"
+                  src="assets/test-flight.mp4"
+                  preload="auto"
+                  muted
+                  playsinline
+                  aria-label="Тестовое видео изделия"
+                  title="Клик по видео ставит метку цели в выбранной точке"
+                ></video>
+                <div id="annotationLayer" aria-hidden="true">
+                  <div class="annotation" style="left: 58%; top: 45%">
+                    <span id="targetLabel">Объект цели / увер. 0.82</span>
+                  </div>
+                  <div class="annotation annotation--friendly" style="left: 30%; top: 64%">
+                    <span>Свое изделие / VP-217</span>
+                  </div>
+                  <div class="annotation--direction" style="left: 47%; top: 56%; --bearing: -45deg"></div>
+                  <div id="userMarks"></div>
+                </div>
+                <div class="video-overlay">
+                  <div class="video-meta">
+                    <span class="pill">Время <strong id="selectedTime">12:42:18.240</strong></span>
+                    <span class="pill">Км маршрута <strong id="routeKm">14.2</strong></span>
+                    <span class="pill">Кадр <strong id="frameId">F-18420</strong></span>
+                  </div>
+                  <div class="timeline">
+                    <div class="timeline-top">
+                      <span>Общая позиция воспроизведения</span>
+                      <span id="timelineLabel">00:18:24 / 00:27:30</span>
+                    </div>
+                    <input
+                      id="timelineRange"
+                      type="range"
+                      min="0"
+                      max="1650"
+                      value="1104"
+                      aria-label="Позиция воспроизведения"
+                    />
+                    <div class="transport">
+                      <button type="button" id="playButton">Пауза</button>
+                      <button type="button" data-action="save-snapshot">Снимок</button>
+                      <button type="button" data-action="save-target-label">Метка цели</button>
+                      <button class="danger" type="button" data-action="replay-last-minute">−1 мин</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div class="lower-row">
+            <section class="panel" data-panel="map-route">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <h2>Маршрут на карте</h2>
+                  <p class="subtle">Текущая позиция, события, сохранённые кадры</p>
+                </div>
+                <span class="pill">Слой <strong id="mapLayer">маршрут + ортофото (черновик)</strong></span>
+              </div>
+              <div class="panel-body">
+                <div class="map-grid">
+                  <div class="map-frame" title="Клик — перемотка, двойной клик — своё событие">
+                    <canvas id="mapCanvas" width="780" height="460" aria-label="Синтетическая карта маршрута"></canvas>
+                    <div id="mapCursor" aria-hidden="true"></div>
+                    <div class="map-legend">
+                      <span class="pill"><span class="dot sync"></span>позиция</span>
+                      <span class="pill"><span class="dot warn"></span>событие</span>
+                      <span class="pill"><span class="dot live"></span>сохр. кадр</span>
+                    </div>
+                  </div>
+                  <div class="event-block">
+                    <div class="block-head">
+                      <div class="panel-title">
+                        <h3>События маршрута</h3>
+                        <p class="subtle">Клик — переход, двойной клик по карте — своё событие</p>
+                      </div>
+                      <button type="button" class="icon-button" data-clear="events" title="Удалить все события">Очистить</button>
+                    </div>
+                    <div class="event-list" id="eventList"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel snapshots-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <h2>Сохранённые кадры и метки</h2>
+                  <p class="subtle">Отдельное хранение для быстрого просмотра</p>
+                </div>
+                <button type="button" class="icon-button" data-clear="snapshots" title="Удалить все кадры и метки">Очистить</button>
+              </div>
+              <div class="panel-body">
+                <div class="snapshot-list" id="snapshotList"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel" data-panel="telemetry">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h2>Телеметрия</h2>
+                <p class="subtle">Значения на выбранное время</p>
+              </div>
+              <span class="pill">1 Гц / синхронно</span>
+            </div>
+            <div class="panel-body telemetry-card">
+              <div id="telemetryBars"></div>
+              <p class="log-line" id="telemetryLog">Источник синхронизации: общие часы видео</p>
+            </div>
+          </section>
+
+          <section class="panel sync-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h2>Синхронный просмотр</h2>
+                <p class="subtle">Выбранные видео на одной шкале</p>
+              </div>
+              <span class="header-tools">
+                <span class="pill" id="syncMode">ведущий/ведомые</span>
+                <button type="button" class="icon-button" data-expand title="Развернуть/свернуть" aria-label="Развернуть синхронный просмотр">⛶</button>
+              </span>
+            </div>
+            <div class="panel-body control-stack">
+              <div class="mini-videos">
+                <div class="mini-video">
+                  <video id="miniVideoA" src="assets/test-flight.mp4" preload="metadata" muted playsinline></video>
+                  <span id="miniA">VP-104 кам. A / +0.0с</span>
+                </div>
+                <div class="mini-video">
+                  <video id="miniVideoB" src="assets/test-flight.mp4" preload="metadata" muted playsinline></video>
+                  <span id="miniB">VP-104 кам. B / +3.0с</span>
+                </div>
+              </div>
+              <div class="button-row">
+                <button type="button" data-action="toggle-sync">Синхр. вкл/выкл</button>
+                <button type="button" data-action="save-snapshot">Сохранить кадр</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel analytics-panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h2>Видеоаналитика</h2>
+                <p class="subtle">Future layer, привязанный к исходным кадрам</p>
+              </div>
+            </div>
+            <div class="panel-body analytics-list">
+              <div class="analytics-grid">
+                <div class="analytics-item">
+                  <strong>Ортофотоплан</strong>
+                  <span>очередь Metashape, 63%</span>
+                </div>
+                <div class="analytics-item">
+                  <strong>GeoServer</strong>
+                  <span>черновой слой готов</span>
+                </div>
+                <div class="analytics-item">
+                  <strong>Последний кач. кадр</strong>
+                  <span id="qualityFrame">F-18420 / увер. 0.82</span>
+                </div>
+                <div class="analytics-item">
+                  <strong>Анализ изменений</strong>
+                  <span>3 серии ортофото</span>
+                </div>
+                <div class="analytics-item">
+                  <strong>Склейка ортофото</strong>
+                  <span>очередь тайлов 4/9, север</span>
+                </div>
+                <div class="analytics-item">
+                  <strong>Геолокация</strong>
+                  <span>привязка кадра к WGS84</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </section>
+      <div id="expandBackdrop" hidden></div>
+    </main>
+
+    <script>
+      const state = {
+        product: "VP-104",
+        area: "north",
+        date: "2026-06-12",
+        duration: 52,
+        reviewMode: "live",
+        sync: true,
+        recording: false,
+        snapshots: [
+          { at: 0.55, title: "Кадр с объектом", meta: "увер. 0.79", img: null, kind: "snapshot" },
+          { at: 0.66, title: "Операторская метка", meta: "км маршрута 14.2", img: null, kind: "label" },
+        ],
+        events: [
+          { at: 0.18, title: "Вход в область", meta: "граница северного сектора" },
+          { at: 0.55, title: "Первый качественный кадр", meta: "объект цели в кадре" },
+          { at: 0.66, title: "Операторский фокус", meta: "фокус оператора" },
+          { at: 0.97, title: "Финиш", meta: "окно быстрого повтора" },
+        ],
+      };
+
+      const products = {
+        "VP-104": { title: "Эфир / VP-104", drift: "+0.08с" },
+        "VP-217": { title: "Архив / VP-217", drift: "+0.03с" },
+        "VP-319": { title: "Синхро-обзор / VP-319", drift: "+0.11с" },
+      };
+
+      const areas = {
+        north: "северный сектор",
+        east: "восточный коридор",
+        delta: "дельта-участок",
+      };
+
+      // Mock archive catalog: segment start positions are fractions of the test video.
+      const catalog = [
+        { product: "VP-104", area: "north", date: "2026-06-12", start: 0.04, labels: 3, note: "взлёт и вход в сектор" },
+        { product: "VP-104", area: "north", date: "2026-06-12", start: 0.42, labels: 2, note: "объект цели в кадре" },
+        { product: "VP-104", area: "north", date: "2026-06-12", start: 0.8, labels: 2, note: "финишный отрезок" },
+        { product: "VP-104", area: "east", date: "2026-06-11", start: 0.3, labels: 1, note: "восточный коридор" },
+        { product: "VP-217", area: "north", date: "2026-06-12", start: 0.2, labels: 1, note: "параллельный проход" },
+        { product: "VP-217", area: "delta", date: "2026-06-12", start: 0.55, labels: 2, note: "дельта, низкий заход" },
+        { product: "VP-217", area: "east", date: "2026-06-11", start: 0.1, labels: 0, note: "архивный проход" },
+        { product: "VP-319", area: "delta", date: "2026-06-12", start: 0.35, labels: 4, note: "синхронный обзор" },
+        { product: "VP-319", area: "north", date: "2026-06-12", start: 0.6, labels: 3, note: "повторный заход" },
+        { product: "VP-319", area: "delta", date: "2026-06-11", start: 0.15, labels: 5, note: "серия меток" },
+      ];
+
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+      const video = $("#videoPlayer");
+      const miniVideos = [
+        { el: $("#miniVideoA"), offset: 0 },
+        { el: $("#miniVideoB"), offset: 3 },
+      ];
+
+      function formatTime(totalSeconds, millis = true) {
+        const hours = 12 + Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+        const ms = Math.floor((totalSeconds % 1) * 1000);
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}${millis ? `.${String(ms).padStart(3, "0")}` : ""}`;
+      }
+
+      function formatDuration(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = Math.floor(totalSeconds % 60);
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      function currentSeconds() {
+        return video.currentTime || 0;
+      }
+
+      function seekTo(value) {
+        if (state.recording) {
+          $("#telemetryLog").textContent = "Идёт запись клипа: перемотка заблокирована";
+          return;
+        }
+        const max = (video.duration || state.duration) - 0.05;
+        video.currentTime = Math.max(0, Math.min(max, Number(value)));
+        syncMiniVideos(true);
+        renderTick();
+      }
+
+      function telemetryValue(base, swing) {
+        return Math.round(base + Math.sin(currentSeconds() / 4) * swing);
+      }
+
+      const captureCanvas = document.createElement("canvas");
+
+      function drawMarksOnCanvas(ctx, w, h, seconds) {
+        const visible = state.snapshots.filter(
+          (item) => item.x != null && Math.abs(snapshotTime(item) - seconds) < 1.5,
+        );
+        if (!visible.length) return;
+        ctx.lineWidth = Math.max(2, Math.round(w / 420));
+        ctx.font = `${Math.max(13, Math.round(w / 48))}px sans-serif`;
+        visible.forEach((item) => {
+          const x = (item.x / 100) * w;
+          const y = (item.y / 100) * h;
+          const boxW = w * 0.075;
+          const boxH = h * 0.085;
+          ctx.strokeStyle = "#4cc9d8";
+          ctx.strokeRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
+          ctx.fillStyle = "#d2f4f8";
+          ctx.fillText(item.title, x - boxW / 2, y + boxH / 2 + Math.max(16, h / 30));
+        });
+      }
+
+      function captureFrame() {
+        if (!video.videoWidth) return null;
+        captureCanvas.width = video.videoWidth;
+        captureCanvas.height = video.videoHeight;
+        const ctx = captureCanvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+        drawMarksOnCanvas(ctx, captureCanvas.width, captureCanvas.height, currentSeconds());
+        try {
+          return captureCanvas.toDataURL("image/jpeg", 0.72);
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function syncMiniVideos(force) {
+        miniVideos.forEach(({ el, offset }) => {
+          if (!el.duration) return;
+          if (!state.sync) {
+            if (!el.paused) el.pause();
+            return;
+          }
+          const target = Math.max(0, Math.min(currentSeconds() + offset, el.duration - 0.05));
+          if (force || Math.abs(el.currentTime - target) > 0.35) el.currentTime = target;
+          if (video.paused && !el.paused) el.pause();
+          if (!video.paused && el.paused) el.play().catch(() => {});
+        });
+      }
+
+      function downloadDataUrl(href, filename) {
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      function captureAt(time) {
+        return new Promise((resolve) => {
+          if (!video.videoWidth || state.recording) {
+            resolve(null);
+            return;
+          }
+          const restore = video.currentTime;
+          const wasPaused = video.paused;
+          video.pause();
+          const onCaptured = () => {
+            video.removeEventListener("seeked", onCaptured);
+            const img = captureFrame();
+            const onRestored = () => {
+              video.removeEventListener("seeked", onRestored);
+              if (!wasPaused) video.play().catch(() => {});
+            };
+            video.addEventListener("seeked", onRestored);
+            video.currentTime = restore;
+            resolve(img);
+          };
+          video.addEventListener("seeked", onCaptured);
+          video.currentTime = Math.max(0, Math.min((video.duration || state.duration) - 0.05, time));
+        });
+      }
+
+      async function downloadSnapshotImage(index) {
+        const item = state.snapshots[index];
+        if (!item) return;
+        if (!item.img) {
+          $("#telemetryLog").textContent = "Захватываю кадр для скачивания…";
+          item.img = await captureAt(snapshotTime(item));
+          if (item.img) render();
+        }
+        if (item.img) {
+          downloadDataUrl(item.img, `${state.product}-frame-${Math.round(snapshotTime(item))}s.jpg`);
+          $("#telemetryLog").textContent = `Кадр скачан: ${item.title}`;
+        } else {
+          $("#telemetryLog").textContent =
+            location.protocol === "file:"
+              ? "Браузер блокирует захват кадров при открытии файла напрямую — откройте через локальный сервер (например: npx serve)"
+              : "Не удалось захватить кадр: видео ещё загружается или идёт запись клипа";
+        }
+      }
+
+      function recordClip(lengthSeconds) {
+        if (state.recording) return;
+        // Compose video + marks on a canvas so annotations are burned into the clip.
+        let stream = null;
+        let paintTimer = 0;
+        if (video.videoWidth && typeof MediaRecorder !== "undefined") {
+          const burn = document.createElement("canvas");
+          burn.width = video.videoWidth;
+          burn.height = video.videoHeight;
+          const burnCtx = burn.getContext("2d");
+          const paint = () => {
+            burnCtx.drawImage(video, 0, 0, burn.width, burn.height);
+            drawMarksOnCanvas(burnCtx, burn.width, burn.height, currentSeconds());
+          };
+          paint();
+          if (burn.captureStream) {
+            stream = burn.captureStream(25);
+            paintTimer = setInterval(paint, 40);
+          }
+        }
+        const burning = Boolean(paintTimer);
+        if (!stream) {
+          stream = video.captureStream
+            ? video.captureStream()
+            : video.mozCaptureStream
+              ? video.mozCaptureStream()
+              : null;
+        }
+        if (!stream || typeof MediaRecorder === "undefined") {
+          $("#telemetryLog").textContent = "Запись клипа не поддерживается: скачиваю весь файл";
+          downloadDataUrl(video.currentSrc, `${state.product}-full.mp4`);
+          return;
+        }
+        let recorder;
+        try {
+          recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+        } catch (error) {
+          recorder = new MediaRecorder(stream);
+        }
+        const clipStart = currentSeconds();
+        const clipProduct = state.product;
+        const chunks = [];
+        recorder.ondataavailable = (event) => {
+          if (event.data.size) chunks.push(event.data);
+        };
+        recorder.onstop = () => {
+          if (paintTimer) clearInterval(paintTimer);
+          state.recording = false;
+          const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
+          downloadDataUrl(url, `${clipProduct}-clip-${Math.round(clipStart)}s.webm`);
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          $("#telemetryLog").textContent = `Клип сохранён${burning ? " с метками" : ""}: ${lengthSeconds}s от ${formatDuration(clipStart)}`;
+          renderTick();
+        };
+        state.recording = true;
+        $("#telemetryLog").textContent = `Запись клипа${burning ? " с метками" : ""}: ${lengthSeconds}s от ${formatDuration(clipStart)}…`;
+        video.play().catch(() => {});
+        recorder.start();
+        setTimeout(() => recorder.stop(), lengthSeconds * 1000);
+        renderTick();
+      }
+
+      function renderMapCanvas() {
+        const canvas = $("#mapCanvas");
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#151a17";
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.strokeStyle = "rgba(255,255,255,0.05)";
+        ctx.lineWidth = 1;
+        for (let x = 40; x < w; x += 68) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x - 48, h);
+          ctx.stroke();
+        }
+        for (let y = 34; y < h; y += 58) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y + 24);
+          ctx.stroke();
+        }
+
+        // Search areas: the zone selected in the area filter is highlighted.
+        const zones = {
+          north: { x: 0.1, y: 0.12, w: 0.33, h: 0.22, color: "76, 201, 216" },
+          east: { x: 0.55, y: 0.16, w: 0.3, h: 0.2, color: "214, 164, 81" },
+          delta: { x: 0.4, y: 0.56, w: 0.31, h: 0.24, color: "182, 161, 230" },
+        };
+        Object.entries(zones).forEach(([key, zone]) => {
+          const active = key === state.area;
+          ctx.fillStyle = `rgba(${zone.color}, ${active ? 0.16 : 0.05})`;
+          ctx.fillRect(w * zone.x, h * zone.y, w * zone.w, h * zone.h);
+          if (active) {
+            ctx.strokeStyle = `rgba(${zone.color}, 0.55)`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(w * zone.x, h * zone.y, w * zone.w, h * zone.h);
+          }
+          ctx.fillStyle = active ? "rgba(237, 241, 242, 0.78)" : "rgba(170, 180, 184, 0.4)";
+          ctx.font = "12px sans-serif";
+          ctx.fillText(areas[key], w * zone.x + 8, h * zone.y + 17);
+        });
+
+        const route = [
+          [0.12, 0.76],
+          [0.23, 0.68],
+          [0.31, 0.61],
+          [0.45, 0.55],
+          [0.58, 0.49],
+          [0.72, 0.42],
+          [0.86, 0.33],
+        ];
+        ctx.strokeStyle = "rgba(76,201,216,0.7)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        route.forEach(([x, y], index) => {
+          if (index === 0) ctx.moveTo(x * w, y * h);
+          else ctx.lineTo(x * w, y * h);
+        });
+        ctx.stroke();
+
+        const progress = currentSeconds() / Math.max(1, state.duration);
+        const cursorX = 12 + progress * 74;
+        const cursorY = 76 - progress * 43 + Math.sin(progress * Math.PI * 3) * 7;
+        $("#mapCursor").style.left = `${cursorX}%`;
+        $("#mapCursor").style.top = `${cursorY}%`;
+
+        ctx.fillStyle = "#d6a451";
+        state.events.forEach((event) => {
+          const p = event.at;
+          const x = (0.12 + p * 0.74) * w;
+          const y = (0.76 - p * 0.43 + Math.sin(p * Math.PI * 3) * 0.07) * h;
+          ctx.beginPath();
+          ctx.arc(x, y, 6, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.fillStyle = "#8fca6e";
+        state.snapshots.forEach((item) => {
+          const p = Math.max(0, Math.min(1, snapshotTime(item) / Math.max(1, state.duration)));
+          const x = (0.12 + p * 0.74) * w;
+          const y = (0.76 - p * 0.43 + Math.sin(p * Math.PI * 3) * 0.07) * h;
+          ctx.beginPath();
+          ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      function renderTelemetry() {
+        const values = [
+          ["Скорость", telemetryValue(72, 11), "%"],
+          ["Сигнал", telemetryValue(86, 7), "%"],
+          ["Высота", telemetryValue(54, 18), "%"],
+          ["Качество", telemetryValue(81, 9), "%"],
+        ];
+        const host = $("#telemetryBars");
+        // Update bars in place so the width transition animates between ticks.
+        if (host.childElementCount !== values.length) {
+          host.innerHTML = values
+            .map(
+              ([name]) => `
+              <div class="bar-row">
+                <span>${name}</span>
+                <div class="bar-track"><div class="bar-fill"></div></div>
+                <span class="bar-value"></span>
+              </div>
+            `,
+            )
+            .join("");
+        }
+        values.forEach(([name, value, unit], index) => {
+          const rowEl = host.children[index];
+          rowEl.querySelector(".bar-fill").style.width = `${value}%`;
+          rowEl.querySelector(".bar-value").textContent = `${value}${unit}`;
+        });
+      }
+
+      function snapshotTime(item) {
+        return item.time != null ? item.time : item.at * state.duration;
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(
+          /[&<>"]/g,
+          (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch],
+        );
+      }
+
+      let lastMarksKey = "";
+
+      function renderUserMarks() {
+        const seconds = currentSeconds();
+        const visible = state.snapshots.filter(
+          (item) => item.x != null && Math.abs(snapshotTime(item) - seconds) < 1.5,
+        );
+        const key = visible.map((item) => `${item.title}@${item.x},${item.y}`).join("|");
+        if (key === lastMarksKey) return;
+        lastMarksKey = key;
+        $("#userMarks").innerHTML = visible
+          .map(
+            (item) => `
+              <div class="annotation annotation--user" style="left: ${item.x}%; top: ${item.y}%">
+                <span>${escapeHtml(item.title)}</span>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      function renderRows() {
+        $("#eventList").innerHTML = state.events
+          .map((event, index) => {
+            const t = event.at * state.duration;
+            return `
+              <div class="row">
+                <span class="timecode">${formatDuration(t)}</span>
+                <span class="row-title"><strong data-rename="event:${index}" tabindex="0" title="Кликните, чтобы переименовать">${escapeHtml(event.title)}</strong><span>${event.meta}</span></span>
+                <span class="row-actions">
+                  <button type="button" data-jump="${t.toFixed(1)}">Перейти</button>
+                  <button type="button" data-delete="event:${index}" title="Удалить" aria-label="Удалить событие">✕</button>
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+
+        $("#snapshotList").innerHTML = state.snapshots
+          .map((item, index) => ({ ...item, index }))
+          .slice(-30)
+          .reverse()
+          .map((item) => {
+            const t = snapshotTime(item);
+            return `
+              <div class="row snap-row${item.img ? " with-thumb" : ""}">
+                <span class="timecode">${formatDuration(t)}</span>
+                ${item.img ? `<img class="thumb" src="${item.img}" alt="" />` : ""}
+                <span class="row-title"><strong data-rename="snap:${item.index}" tabindex="0" title="Кликните, чтобы переименовать">${escapeHtml(item.title)}</strong><span>${item.meta}</span></span>
+                <span class="row-actions">
+                  <button type="button" data-jump="${t.toFixed(1)}">Открыть</button>
+                  <button type="button" data-save-img="${item.index}" title="Скачать этот кадр в формате JPG">Скачать JPG</button>
+                  <button type="button" data-delete="snap:${item.index}" title="Удалить" aria-label="Удалить запись">✕</button>
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+
+        const matches = catalog.filter(
+          (seg) => seg.product === state.product && seg.area === state.area && seg.date === state.date,
+        );
+        $("#archiveList").innerHTML = matches.length
+          ? matches
+              .map((seg) => {
+                const start = seg.start * state.duration;
+                return `
+              <div class="row">
+                <span class="timecode">${formatDuration(start)}</span>
+                <span class="row-title"><strong>${seg.product} / ${seg.note}</strong><span>${areas[seg.area]}, метки ${seg.labels}</span></span>
+                <button type="button" data-jump="${start.toFixed(1)}">Смотреть</button>
+              </div>
+            `;
+              })
+              .join("")
+          : `
+              <div class="row">
+                <span class="timecode">--:--</span>
+                <span class="row-title"><strong>Ничего не найдено</strong><span>измените изделие, область или дату</span></span>
+                <span></span>
+              </div>
+            `;
+        return matches;
+      }
+
+      function renderTick() {
+        const seconds = currentSeconds();
+        $("#timelineRange").value = seconds;
+        $("#sharedClock").textContent = formatTime(seconds + 96);
+        $("#selectedTime").textContent = formatTime(seconds + 96);
+        $("#timelineLabel").textContent = `${formatDuration(seconds)} / ${formatDuration(state.duration)}`;
+        $("#routeKm").textContent = (3.4 + (seconds / Math.max(1, state.duration)) * 16.1).toFixed(1);
+        $("#frameId").textContent = `F-${Math.round(seconds * 25)}`;
+        $("#qualityFrame").textContent = `${$("#frameId").textContent} / увер. 0.${Math.round(78 + Math.sin(seconds / 6) * 7)}`;
+        $("#videoSubtitle").textContent =
+          state.reviewMode === "last-minute"
+            ? "Индексированное окно последней минуты: изделие, время, маршрут"
+            : "RTSP-источник привязан к изделию, времени и маршруту";
+        $("#streamState").textContent = state.recording
+          ? "запись клипа"
+          : video.ended
+            ? "завершено"
+            : state.reviewMode === "last-minute"
+              ? "повтор финиша"
+              : video.paused
+                ? "пауза / просмотр"
+                : "эфир 25 к/с";
+        $("#playButton").textContent = video.paused ? "Пуск" : "Пауза";
+        renderMapCanvas();
+        renderTelemetry();
+        renderUserMarks();
+        syncMiniVideos(false);
+      }
+
+      function render() {
+        const product = products[state.product];
+        const matches = renderRows();
+        $("#videoTitle").textContent = product.title;
+        $("#clipCount").textContent = matches.length;
+        const added = addedLabelCount();
+        $("#labelCount").textContent = matches.reduce((sum, seg) => sum + seg.labels, 0) + added;
+        $("#targetLabel").textContent = added ? `Объект цели / меток +${added}` : "Объект цели / увер. 0.82";
+        $("#snapshotCount").textContent = state.snapshots.length;
+        $("#syncDrift").textContent = product.drift;
+        $("#syncButton").textContent = state.sync ? "Синхр. вкл" : "Синхр. выкл";
+        $("#syncMode").textContent = state.sync ? "ведущий/ведомые" : "независимо";
+        $("#miniA").textContent = `${state.product} кам. A / +0.0с`;
+        $("#miniB").textContent = `${state.product} кам. B / +3.0с`;
+        $("#searchSummary").textContent = `${state.product}, ${areas[state.area]}, ${state.date}`;
+        $("#telemetryLog").textContent = state.sync
+          ? "Источник синхронизации: общие часы видео"
+          : "Независимый просмотр: часы телеметрии отвязаны";
+        renderTick();
+      }
+
+      function addedLabelCount() {
+        return state.snapshots.filter((item) => item.added && item.kind === "label").length;
+      }
+
+      function saveSnapshot(kind, point) {
+        if (!video.videoWidth) {
+          $("#telemetryLog").textContent = "Видео ещё не загружено: снимок недоступен";
+          return;
+        }
+        const seconds = currentSeconds();
+        const frame = `F-${Math.round(seconds * 25)}`;
+        const item = {
+          time: seconds,
+          title: kind === "label" ? `Метка цели ${addedLabelCount() + 1}` : `Снимок ${state.snapshots.length + 1}`,
+          meta: `${frame} / ${state.product} / ${areas[state.area]}`,
+          img: null,
+          kind,
+          added: true,
+        };
+        if (point) {
+          item.x = point.x;
+          item.y = point.y;
+          item.meta += ` / точка ${point.x}%, ${point.y}%`;
+        }
+        state.snapshots.push(item);
+        // Capture after push so a freshly placed mark is burned into its own frame.
+        item.img = captureFrame();
+        render();
+      }
+
+      function handleAction(action) {
+        if (action === "toggle-sync") {
+          state.sync = !state.sync;
+          syncMiniVideos(true);
+          render();
+        }
+        if (action === "replay-last-minute") {
+          if (state.recording) return;
+          const windowSec = Math.min(60, Math.max(5, state.duration / 3));
+          state.reviewMode = "last-minute";
+          seekTo(Math.max(0, state.duration - windowSec));
+          video.play().catch(() => {});
+        }
+        if (action === "save-snapshot") {
+          saveSnapshot("snapshot");
+        }
+        if (action === "save-target-label") {
+          saveSnapshot("label");
+        }
+        if (action === "download-product-video") {
+          downloadDataUrl(video.currentSrc, `${state.product}-full.mp4`);
+          $("#telemetryLog").textContent = `Скачивание запущено: полное видео ${state.product}`;
+        }
+        if (action === "download-selected-clip") {
+          recordClip(5);
+        }
+        if (action === "download-last-minute") {
+          downloadLastMinute();
+        }
+      }
+
+      function downloadLastMinute() {
+        if (state.recording) return;
+        const windowSec = 60;
+        if (state.duration <= windowSec + 1) {
+          downloadDataUrl(video.currentSrc, `${state.product}-last-minute.mp4`);
+          $("#telemetryLog").textContent = "Последняя минута: ролик короче минуты — скачан целиком";
+          return;
+        }
+        // Longer source: jump to the final minute and record it in real time.
+        seekTo(Math.max(0, state.duration - windowSec));
+        recordClip(windowSec);
+      }
+
+      function startRename(button) {
+        const [kind, indexRaw] = button.dataset.rename.split(":");
+        const target = kind === "event" ? state.events[Number(indexRaw)] : state.snapshots[Number(indexRaw)];
+        if (!target) return;
+        const titleNode = button.closest(".row").querySelector(".row-title strong");
+        if (!titleNode || titleNode.querySelector("input")) return;
+        const input = document.createElement("input");
+        input.className = "rename-input";
+        input.value = target.title;
+        input.setAttribute("aria-label", "Новое название");
+        titleNode.textContent = "";
+        titleNode.appendChild(input);
+        input.focus();
+        input.select();
+        let done = false;
+        const commit = (save) => {
+          if (done) return;
+          done = true;
+          const value = input.value.trim();
+          if (save && value) target.title = value;
+          render();
+        };
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") commit(true);
+          if (event.key === "Escape") commit(false);
+        });
+        input.addEventListener("blur", () => commit(true));
+        input.addEventListener("click", (event) => event.stopPropagation());
+      }
+
+      let expandedPanel = null;
+
+      function toggleExpand(panel) {
+        if (!panel) return;
+        const expand = expandedPanel !== panel;
+        if (expandedPanel) expandedPanel.classList.remove("expanded");
+        expandedPanel = expand ? panel : null;
+        if (expand) panel.classList.add("expanded");
+        $("#expandBackdrop").hidden = !expand;
+      }
+
+      $("#expandBackdrop").addEventListener("click", () => toggleExpand(expandedPanel));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && expandedPanel) toggleExpand(expandedPanel);
+        if (event.key === "Enter" && event.target.matches && event.target.matches("strong[data-rename]")) {
+          startRename(event.target);
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        const renameButton = event.target.closest("[data-rename]");
+        if (renameButton) {
+          startRename(renameButton);
+          return;
+        }
+
+        const expandButton = event.target.closest("[data-expand]");
+        if (expandButton) {
+          toggleExpand(expandButton.closest(".panel"));
+          return;
+        }
+
+        const clearButton = event.target.closest("[data-clear]");
+        if (clearButton) {
+          const target = clearButton.dataset.clear;
+          if (target === "events") state.events = [];
+          else state.snapshots = [];
+          render();
+          $("#telemetryLog").textContent =
+            target === "events" ? "Все события маршрута удалены" : "Все кадры и метки удалены";
+          return;
+        }
+
+        const deleteButton = event.target.closest("[data-delete]");
+        if (deleteButton) {
+          const [kind, indexRaw] = deleteButton.dataset.delete.split(":");
+          if (kind === "event") state.events.splice(Number(indexRaw), 1);
+          else state.snapshots.splice(Number(indexRaw), 1);
+          render();
+          return;
+        }
+
+        const actionButton = event.target.closest("[data-action]");
+        if (actionButton) handleAction(actionButton.dataset.action);
+
+        const jumpButton = event.target.closest("[data-jump]");
+        if (jumpButton) {
+          state.reviewMode = "live";
+          seekTo(jumpButton.dataset.jump);
+        }
+
+        const saveButton = event.target.closest("[data-save-img]");
+        if (saveButton) {
+          downloadSnapshotImage(Number(saveButton.dataset.saveImg));
+        }
+      });
+
+      $("#videoPlayer").addEventListener("click", (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = Math.round(((event.clientX - rect.left) / rect.width) * 1000) / 10;
+        const y = Math.round(((event.clientY - rect.top) / rect.height) * 1000) / 10;
+        saveSnapshot("label", { x, y });
+      });
+
+      $("#timelineRange").addEventListener("input", (event) => {
+        state.reviewMode = "live";
+        seekTo(event.target.value);
+      });
+      $("#playButton").addEventListener("click", () => {
+        if (state.recording) return;
+        state.reviewMode = "live";
+        if (video.paused) video.play().catch(() => {});
+        else video.pause();
+      });
+      $("#productSelect").addEventListener("change", (event) => {
+        state.product = event.target.value;
+        render();
+      });
+      $("#areaSelect").addEventListener("change", (event) => {
+        state.area = event.target.value;
+        render();
+      });
+      $("#dateSelect").addEventListener("change", (event) => {
+        state.date = event.target.value;
+        render();
+      });
+      $("#searchButton").addEventListener("click", () => {
+        render();
+        $("#telemetryLog").textContent = `Найдено сегментов: ${$("#clipCount").textContent} (${state.product}, ${areas[state.area]}, ${state.date})`;
+      });
+
+      function mapClickProgress(event) {
+        const frame = event.currentTarget.getBoundingClientRect();
+        const xPercent = ((event.clientX - frame.left) / frame.width) * 100;
+        // Inverse of the route cursor mapping in renderMapCanvas: x% = 12 + progress * 74.
+        return Math.max(0, Math.min(1, (xPercent - 12) / 74));
+      }
+
+      $("#mapCanvas").addEventListener("click", (event) => {
+        state.reviewMode = "live";
+        seekTo(mapClickProgress(event) * state.duration);
+      });
+
+      $("#mapCanvas").addEventListener("dblclick", (event) => {
+        const progress = mapClickProgress(event);
+        state.events.push({
+          at: progress,
+          title: `Событие ${state.events.length + 1}`,
+          meta: "пользовательское событие",
+          user: true,
+        });
+        state.events.sort((a, b) => a.at - b.at);
+        render();
+        $("#telemetryLog").textContent = `Событие добавлено на ${formatDuration(progress * state.duration)}`;
+      });
+
+      video.addEventListener("loadedmetadata", () => {
+        state.duration = video.duration;
+        const range = $("#timelineRange");
+        range.max = video.duration;
+        range.step = "0.1";
+        seekTo(state.duration * 0.66);
+        render();
+      });
+      video.addEventListener("loadeddata", () => {
+        if (!captureFrame()) {
+          $("#telemetryLog").textContent =
+            "Внимание: захват кадров заблокирован (файл открыт напрямую). Для миниатюр и скачивания JPG откройте концепт через локальный сервер.";
+        }
+      });
+      video.addEventListener("timeupdate", renderTick);
+      ["play", "pause", "ended", "seeked"].forEach((name) => video.addEventListener(name, renderTick));
+      video.addEventListener("error", () => {
+        $("#telemetryLog").textContent = "Видео не загрузилось: проверьте assets/test-flight.mp4";
+      });
+
+      render();
+    </script>
+  </body>
+</html>

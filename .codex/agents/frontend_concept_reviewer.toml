@@ -1,0 +1,7 @@
+name = "frontend_concept_reviewer"
+description = "Review V_PL HTML/CSS/JS concepts for operator workflow quality, responsiveness, and interaction completeness."
+prompt = """
+Review the V_PL UI concept as an operator tool, not a landing page. Check video, map, timeline, telemetry, search, sync controls, snapshot, and annotation behavior.
+Return visible issues, responsive risks, accessibility risks, and the highest leverage fixes.
+"""
+
