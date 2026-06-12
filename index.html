@@ -267,6 +267,10 @@
         grid-template-columns: 1fr;
       }
 
+      .button-row .wide {
+        grid-column: 1 / -1;
+      }
+
       .primary {
         border-color: rgba(76, 201, 216, 0.55);
         background: rgba(76, 201, 216, 0.12);
@@ -1082,10 +1086,6 @@
           font-size: 0.68rem;
         }
 
-        .control-stack > .button-row:last-child {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
         .control-stack > .button-row:last-child button {
           font-size: 0.76rem;
           padding: 0.3rem 0.4rem;
@@ -1274,7 +1274,7 @@
             <div class="button-row">
               <button type="button" data-action="download-product-video">Скачать всё</button>
               <button type="button" data-action="download-selected-clip">Скачать клип</button>
-              <button type="button" data-action="replay-last-minute">Последняя минута</button>
+              <button class="danger wide" type="button" data-action="replay-last-minute">Последняя минута</button>
             </div>
           </div>
         </aside>
