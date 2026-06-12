@@ -322,16 +322,19 @@
         overflow: hidden;
       }
 
-      #videoCanvas,
       #mapCanvas {
         width: 100%;
         height: 100%;
         display: block;
       }
 
-      #videoCanvas {
+      #videoPlayer {
         position: absolute;
         inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
       }
 
       #annotationLayer {
@@ -481,6 +484,23 @@
         padding: 0.25rem 0.45rem;
       }
 
+      .row.with-thumb {
+        grid-template-columns: auto auto 1fr auto;
+      }
+
+      .thumb {
+        width: 3.4rem;
+        height: 1.95rem;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+      }
+
+      .row-actions {
+        display: flex;
+        gap: 0.3rem;
+      }
+
       .timecode {
         color: var(--cyan);
         font-variant-numeric: tabular-nums;
@@ -563,15 +583,12 @@
         overflow: hidden;
       }
 
-      .mini-video::after {
-        content: "";
+      .mini-video video {
         position: absolute;
-        left: 10%;
-        right: 18%;
-        top: 48%;
-        height: 2px;
-        background: rgba(240, 211, 110, 0.7);
-        transform: rotate(-7deg);
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
       .mini-video span {
@@ -579,8 +596,9 @@
         left: 0.5rem;
         right: 0.5rem;
         bottom: 0.45rem;
-        color: var(--muted);
+        color: var(--text);
         font-size: 0.72rem;
+        text-shadow: 0 1px 2px #000;
       }
 
       .analytics-grid {
@@ -1164,7 +1182,15 @@
             </div>
             <div class="panel-body">
               <div class="video-stage">
-                <canvas id="videoCanvas" width="1280" height="720" aria-label="Синтетический видеокадр"></canvas>
+                <!-- Test footage: Sintel trailer (c) Blender Foundation, CC BY 3.0 (media.w3.org) -->
+                <video
+                  id="videoPlayer"
+                  src="assets/test-flight.mp4"
+                  preload="auto"
+                  muted
+                  playsinline
+                  aria-label="Тестовое видео изделия"
+                ></video>
                 <div id="annotationLayer" aria-hidden="true">
                   <div class="annotation" style="left: 58%; top: 45%">
                     <span id="targetLabel">Target object / conf 0.82</span>
@@ -1275,8 +1301,14 @@
             </div>
             <div class="panel-body control-stack">
               <div class="mini-videos">
-                <div class="mini-video"><span id="miniA">VP-104 cam A / +0.00s</span></div>
-                <div class="mini-video"><span id="miniB">VP-104 cam B / +0.08s</span></div>
+                <div class="mini-video">
+                  <video id="miniVideoA" src="assets/test-flight.mp4" preload="metadata" muted playsinline></video>
+                  <span id="miniA">VP-104 cam A / +0.0s</span>
+                </div>
+                <div class="mini-video">
+                  <video id="miniVideoB" src="assets/test-flight.mp4" preload="metadata" muted playsinline></video>
+                  <span id="miniB">VP-104 cam B / +3.0s</span>
+                </div>
               </div>
               <div class="button-row">
                 <button type="button" data-action="toggle-sync">Sync on/off</button>
@@ -1330,28 +1362,27 @@
         product: "VP-104",
         area: "north",
         date: "2026-06-12",
-        seconds: 1104,
-        duration: 1650,
+        duration: 52,
         reviewMode: "live",
-        playing: false,
         sync: true,
         addedLabels: 0,
+        recording: false,
         snapshots: [
-          { time: 1088, title: "Кадр с объектом", meta: "F-18192 / conf 0.79" },
-          { time: 1104, title: "Операторская метка", meta: "route km 14.2" },
+          { at: 0.55, title: "Кадр с объектом", meta: "conf 0.79", img: null },
+          { at: 0.66, title: "Операторская метка", meta: "route km 14.2", img: null },
         ],
         events: [
-          { time: 960, title: "Вход в область", meta: "north sector boundary" },
-          { time: 1088, title: "Первый качественный кадр", meta: "target object visible" },
-          { time: 1104, title: "Текущий фрейм", meta: "operator focus" },
-          { time: 1590, title: "Финиш - 1 минута", meta: "fast replay window" },
+          { at: 0.18, title: "Вход в область", meta: "north sector boundary" },
+          { at: 0.55, title: "Первый качественный кадр", meta: "target object visible" },
+          { at: 0.66, title: "Операторский фокус", meta: "operator focus" },
+          { at: 0.97, title: "Финиш", meta: "fast replay window" },
         ],
       };
 
       const products = {
-        "VP-104": { clips: 18, labels: 7, title: "Live video / VP-104", drift: "+0.08s" },
-        "VP-217": { clips: 11, labels: 3, title: "Archive review / VP-217", drift: "+0.03s" },
-        "VP-319": { clips: 24, labels: 12, title: "Sync review / VP-319", drift: "+0.11s" },
+        "VP-104": { title: "Live video / VP-104", drift: "+0.08s" },
+        "VP-217": { title: "Archive review / VP-217", drift: "+0.03s" },
+        "VP-319": { title: "Sync review / VP-319", drift: "+0.11s" },
       };
 
       const areas = {
@@ -1360,8 +1391,28 @@
         delta: "дельта-участок",
       };
 
+      // Mock archive catalog: segment start positions are fractions of the test video.
+      const catalog = [
+        { product: "VP-104", area: "north", date: "2026-06-12", start: 0.04, labels: 3, note: "взлёт и вход в сектор" },
+        { product: "VP-104", area: "north", date: "2026-06-12", start: 0.42, labels: 2, note: "объект цели в кадре" },
+        { product: "VP-104", area: "north", date: "2026-06-12", start: 0.8, labels: 2, note: "финишный отрезок" },
+        { product: "VP-104", area: "east", date: "2026-06-11", start: 0.3, labels: 1, note: "восточный коридор" },
+        { product: "VP-217", area: "north", date: "2026-06-12", start: 0.2, labels: 1, note: "параллельный проход" },
+        { product: "VP-217", area: "delta", date: "2026-06-12", start: 0.55, labels: 2, note: "дельта, низкий заход" },
+        { product: "VP-217", area: "east", date: "2026-06-11", start: 0.1, labels: 0, note: "архивный проход" },
+        { product: "VP-319", area: "delta", date: "2026-06-12", start: 0.35, labels: 4, note: "синхронный обзор" },
+        { product: "VP-319", area: "north", date: "2026-06-12", start: 0.6, labels: 3, note: "повторный заход" },
+        { product: "VP-319", area: "delta", date: "2026-06-11", start: 0.15, labels: 5, note: "серия меток" },
+      ];
+
       const $ = (selector) => document.querySelector(selector);
       const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+      const video = $("#videoPlayer");
+      const miniVideos = [
+        { el: $("#miniVideoA"), offset: 0 },
+        { el: $("#miniVideoB"), offset: 3 },
+      ];
 
       function formatTime(totalSeconds, millis = true) {
         const hours = 12 + Math.floor(totalSeconds / 3600);
@@ -1377,60 +1428,100 @@
         return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
       }
 
-      function setSeconds(value) {
-        state.seconds = Math.max(0, Math.min(state.duration, Number(value)));
-        render();
+      function currentSeconds() {
+        return video.currentTime || 0;
+      }
+
+      function seekTo(value) {
+        if (state.recording) {
+          $("#telemetryLog").textContent = "Идёт запись клипа: перемотка заблокирована";
+          return;
+        }
+        const max = (video.duration || state.duration) - 0.05;
+        video.currentTime = Math.max(0, Math.min(max, Number(value)));
+        syncMiniVideos(true);
+        renderTick();
       }
 
       function telemetryValue(base, swing) {
-        return Math.round(base + Math.sin(state.seconds / 85) * swing);
+        return Math.round(base + Math.sin(currentSeconds() / 4) * swing);
       }
 
-      function renderVideoCanvas() {
-        const canvas = $("#videoCanvas");
-        const ctx = canvas.getContext("2d");
-        const w = canvas.width;
-        const h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
+      const captureCanvas = document.createElement("canvas");
 
-        const sky = ctx.createLinearGradient(0, 0, 0, h);
-        sky.addColorStop(0, "#293034");
-        sky.addColorStop(0.42, "#171d1f");
-        sky.addColorStop(1, "#2a281d");
-        ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, w, h);
+      function captureFrame() {
+        if (!video.videoWidth) return null;
+        captureCanvas.width = video.videoWidth;
+        captureCanvas.height = video.videoHeight;
+        captureCanvas.getContext("2d").drawImage(video, 0, 0);
+        try {
+          return captureCanvas.toDataURL("image/jpeg", 0.72);
+        } catch (error) {
+          return null;
+        }
+      }
 
-        for (let i = 0; i < 9; i += 1) {
-          ctx.beginPath();
-          const y = h * (0.38 + i * 0.065);
-          ctx.moveTo(-40, y);
-          for (let x = 0; x <= w + 80; x += 80) {
-            ctx.lineTo(x, y + Math.sin((x + state.seconds * 5 + i * 40) / 120) * 22);
+      function syncMiniVideos(force) {
+        miniVideos.forEach(({ el, offset }) => {
+          if (!el.duration) return;
+          if (!state.sync) {
+            if (!el.paused) el.pause();
+            return;
           }
-          ctx.strokeStyle = i % 2 ? "rgba(143,202,110,0.17)" : "rgba(214,164,81,0.13)";
-          ctx.lineWidth = 2;
-          ctx.stroke();
+          const target = Math.max(0, Math.min(currentSeconds() + offset, el.duration - 0.05));
+          if (force || Math.abs(el.currentTime - target) > 0.35) el.currentTime = target;
+          if (video.paused && !el.paused) el.pause();
+          if (!video.paused && el.paused) el.play().catch(() => {});
+        });
+      }
+
+      function downloadDataUrl(href, filename) {
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      function recordClip(lengthSeconds) {
+        if (state.recording) return;
+        const stream = video.captureStream
+          ? video.captureStream()
+          : video.mozCaptureStream
+            ? video.mozCaptureStream()
+            : null;
+        if (!stream || typeof MediaRecorder === "undefined") {
+          $("#telemetryLog").textContent = "Запись клипа не поддерживается: скачиваю весь файл";
+          downloadDataUrl(video.currentSrc, `${state.product}-full.mp4`);
+          return;
         }
-
-        for (let i = 0; i < 36; i += 1) {
-          const x = (i * 137 + state.seconds * 4) % (w + 120) - 60;
-          const y = h * (0.36 + ((i * 31) % 42) / 100);
-          ctx.fillStyle = i % 3 === 0 ? "rgba(76,201,216,0.14)" : "rgba(255,255,255,0.08)";
-          ctx.fillRect(x, y, 42 + (i % 4) * 16, 10 + (i % 3) * 8);
+        let recorder;
+        try {
+          recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+        } catch (error) {
+          recorder = new MediaRecorder(stream);
         }
-
-        ctx.strokeStyle = "rgba(240,211,110,0.6)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(w * 0.12, h * 0.76);
-        ctx.lineTo(w * 0.48, h * 0.58);
-        ctx.lineTo(w * 0.82, h * 0.5);
-        ctx.stroke();
-
-        ctx.fillStyle = "rgba(237,241,242,0.68)";
-        ctx.font = "18px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
-        ctx.fillText(`${state.product} / ${formatTime(state.seconds)}`, 28, 42);
-        ctx.fillText("synthetic operator preview", 28, 70);
+        const clipStart = currentSeconds();
+        const clipProduct = state.product;
+        const chunks = [];
+        recorder.ondataavailable = (event) => {
+          if (event.data.size) chunks.push(event.data);
+        };
+        recorder.onstop = () => {
+          state.recording = false;
+          const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
+          downloadDataUrl(url, `${clipProduct}-clip-${Math.round(clipStart)}s.webm`);
+          setTimeout(() => URL.revokeObjectURL(url), 10000);
+          $("#telemetryLog").textContent = `Клип сохранён: ${lengthSeconds}s от ${formatDuration(clipStart)}`;
+          renderTick();
+        };
+        state.recording = true;
+        $("#telemetryLog").textContent = `Запись клипа: ${lengthSeconds}s от ${formatDuration(clipStart)}…`;
+        video.play().catch(() => {});
+        recorder.start();
+        setTimeout(() => recorder.stop(), lengthSeconds * 1000);
+        renderTick();
       }
 
       function renderMapCanvas() {
@@ -1480,7 +1571,7 @@
         });
         ctx.stroke();
 
-        const progress = state.seconds / state.duration;
+        const progress = currentSeconds() / Math.max(1, state.duration);
         const cursorX = 12 + progress * 74;
         const cursorY = 76 - progress * 43 + Math.sin(progress * Math.PI * 3) * 7;
         $("#mapCursor").style.left = `${cursorX}%`;
@@ -1488,7 +1579,7 @@
 
         ctx.fillStyle = "#d6a451";
         state.events.forEach((event) => {
-          const p = event.time / state.duration;
+          const p = event.at;
           const x = (0.12 + p * 0.74) * w;
           const y = (0.76 - p * 0.43 + Math.sin(p * Math.PI * 3) * 0.07) * h;
           ctx.beginPath();
@@ -1517,94 +1608,133 @@
           .join("");
       }
 
+      function snapshotTime(item) {
+        return item.time != null ? item.time : item.at * state.duration;
+      }
+
       function renderRows() {
         $("#eventList").innerHTML = state.events
-          .map(
-            (event) => `
-              <div class="row">
-                <span class="timecode">${formatDuration(event.time)}</span>
-                <span class="row-title"><strong>${event.title}</strong><span>${event.meta}</span></span>
-                <button type="button" data-jump="${event.time}">Jump</button>
-              </div>
-            `,
-          )
-          .join("");
-
-        $("#snapshotList").innerHTML = state.snapshots
-          .slice(-30)
-          .reverse()
-          .map(
-            (item) => `
-              <div class="row">
-                <span class="timecode">${formatDuration(item.time)}</span>
-                <span class="row-title"><strong>${item.title}</strong><span>${item.meta}</span></span>
-                <button type="button" data-jump="${item.time}">Open</button>
-              </div>
-            `,
-          )
-          .join("");
-
-        const product = products[state.product];
-        $("#archiveList").innerHTML = [0, 1, 2]
-          .map((offset) => {
-            const start = Math.max(0, state.seconds - 180 + offset * 90);
+          .map((event) => {
+            const t = event.at * state.duration;
             return `
               <div class="row">
-                <span class="timecode">${formatDuration(start)}</span>
-                <span class="row-title"><strong>${state.product} segment ${offset + 1}</strong><span>${areas[state.area]}, labels ${Math.max(1, product.labels - offset)}</span></span>
-                <button type="button" data-jump="${start}">View</button>
+                <span class="timecode">${formatDuration(t)}</span>
+                <span class="row-title"><strong>${event.title}</strong><span>${event.meta}</span></span>
+                <button type="button" data-jump="${t.toFixed(1)}">Jump</button>
               </div>
             `;
           })
           .join("");
+
+        $("#snapshotList").innerHTML = state.snapshots
+          .map((item, index) => ({ ...item, index }))
+          .slice(-30)
+          .reverse()
+          .map((item) => {
+            const t = snapshotTime(item);
+            return `
+              <div class="row${item.img ? " with-thumb" : ""}">
+                <span class="timecode">${formatDuration(t)}</span>
+                ${item.img ? `<img class="thumb" src="${item.img}" alt="" />` : ""}
+                <span class="row-title"><strong>${item.title}</strong><span>${item.meta}</span></span>
+                <span class="row-actions">
+                  <button type="button" data-jump="${t.toFixed(1)}">Open</button>
+                  ${item.img ? `<button type="button" data-save-img="${item.index}">JPG</button>` : ""}
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+
+        const matches = catalog.filter(
+          (seg) => seg.product === state.product && seg.area === state.area && seg.date === state.date,
+        );
+        $("#archiveList").innerHTML = matches.length
+          ? matches
+              .map((seg) => {
+                const start = seg.start * state.duration;
+                return `
+              <div class="row">
+                <span class="timecode">${formatDuration(start)}</span>
+                <span class="row-title"><strong>${seg.product} / ${seg.note}</strong><span>${areas[seg.area]}, метки ${seg.labels}</span></span>
+                <button type="button" data-jump="${start.toFixed(1)}">View</button>
+              </div>
+            `;
+              })
+              .join("")
+          : `
+              <div class="row">
+                <span class="timecode">--:--</span>
+                <span class="row-title"><strong>Ничего не найдено</strong><span>измените изделие, область или дату</span></span>
+                <span></span>
+              </div>
+            `;
+        return matches;
       }
 
-      function render() {
-        const product = products[state.product];
-        $("#timelineRange").value = state.seconds;
-        $("#sharedClock").textContent = formatTime(state.seconds + 96);
-        $("#selectedTime").textContent = formatTime(state.seconds + 96);
-        $("#timelineLabel").textContent = `${formatDuration(state.seconds)} / ${formatDuration(state.duration)}`;
-        $("#routeKm").textContent = (3.4 + (state.seconds / state.duration) * 16.1).toFixed(1);
-        $("#frameId").textContent = `F-${Math.round(14800 + state.seconds * 3.28)}`;
-        $("#qualityFrame").textContent = `${$("#frameId").textContent} / conf 0.${Math.round(78 + Math.sin(state.seconds / 120) * 7)}`;
-        $("#videoTitle").textContent = product.title;
+      function renderTick() {
+        const seconds = currentSeconds();
+        $("#timelineRange").value = seconds;
+        $("#sharedClock").textContent = formatTime(seconds + 96);
+        $("#selectedTime").textContent = formatTime(seconds + 96);
+        $("#timelineLabel").textContent = `${formatDuration(seconds)} / ${formatDuration(state.duration)}`;
+        $("#routeKm").textContent = (3.4 + (seconds / Math.max(1, state.duration)) * 16.1).toFixed(1);
+        $("#frameId").textContent = `F-${Math.round(seconds * 25)}`;
+        $("#qualityFrame").textContent = `${$("#frameId").textContent} / conf 0.${Math.round(78 + Math.sin(seconds / 6) * 7)}`;
         $("#videoSubtitle").textContent =
           state.reviewMode === "last-minute"
             ? "Indexed final-minute replay window bound to product/time/route"
             : "RTSP source bound to product, time, and route";
-        $("#clipCount").textContent = product.clips;
-        $("#labelCount").textContent = product.labels + state.addedLabels;
+        $("#streamState").textContent = state.recording
+          ? "recording clip"
+          : video.ended
+            ? "finished"
+            : state.reviewMode === "last-minute"
+              ? "indexed replay"
+              : video.paused
+                ? "paused review"
+                : "live 25 fps";
+        $("#playButton").textContent = video.paused ? "Play" : "Pause";
+        renderMapCanvas();
+        renderTelemetry();
+        syncMiniVideos(false);
+      }
+
+      function render() {
+        const product = products[state.product];
+        const matches = renderRows();
+        $("#videoTitle").textContent = product.title;
+        $("#clipCount").textContent = matches.length;
+        $("#labelCount").textContent = matches.reduce((sum, seg) => sum + seg.labels, 0) + state.addedLabels;
         $("#snapshotCount").textContent = state.snapshots.length;
         $("#syncDrift").textContent = product.drift;
         $("#syncButton").textContent = state.sync ? "Sync on" : "Sync off";
         $("#syncMode").textContent = state.sync ? "master/slave" : "independent";
-        $("#miniB").textContent = `${state.product} cam B / ${product.drift}`;
-        $("#miniA").textContent = `${state.product} cam A / +0.00s`;
-        $("#streamState").textContent =
-          state.reviewMode === "last-minute" ? "indexed -1 min" : state.playing ? "live 25 fps" : "paused review";
-        $("#playButton").textContent = state.playing ? "Pause" : "Play";
+        $("#miniA").textContent = `${state.product} cam A / +0.0s`;
+        $("#miniB").textContent = `${state.product} cam B / +3.0s`;
         $("#searchSummary").textContent = `${state.product}, ${areas[state.area]}, ${state.date}`;
         $("#telemetryLog").textContent = state.sync
           ? "Sync source: master video clock"
           : "Independent review: telemetry clock unlocked";
-        renderVideoCanvas();
-        renderMapCanvas();
-        renderTelemetry();
-        renderRows();
+        renderTick();
       }
 
       function saveSnapshot(kind) {
-        const frame = $("#frameId").textContent;
+        if (!video.videoWidth) {
+          $("#telemetryLog").textContent = "Видео ещё не загружено: снимок недоступен";
+          return;
+        }
+        const seconds = currentSeconds();
+        const frame = `F-${Math.round(seconds * 25)}`;
         state.snapshots.push({
-          time: state.seconds,
+          time: seconds,
           title: kind === "label" ? "Метка цели сохранена" : "Снимок сохранён",
           meta: `${frame} / ${state.product} / ${areas[state.area]}`,
+          img: captureFrame(),
         });
         if (kind === "label") {
           state.addedLabels += 1;
-          const labelNumber = products[state.product].labels + state.addedLabels;
-          $("#targetLabel").textContent = `Target object / label ${labelNumber}`;
+          $("#targetLabel").textContent = `Target object / label +${state.addedLabels}`;
         }
         render();
       }
@@ -1612,12 +1742,15 @@
       function handleAction(action) {
         if (action === "toggle-sync") {
           state.sync = !state.sync;
+          syncMiniVideos(true);
           render();
         }
         if (action === "replay-last-minute") {
-          state.playing = false;
+          if (state.recording) return;
+          const windowSec = Math.min(60, Math.max(5, state.duration / 3));
           state.reviewMode = "last-minute";
-          setSeconds(Math.max(0, state.duration - 60));
+          seekTo(Math.max(0, state.duration - windowSec));
+          video.play().catch(() => {});
         }
         if (action === "save-snapshot") {
           saveSnapshot("snapshot");
@@ -1626,10 +1759,11 @@
           saveSnapshot("label");
         }
         if (action === "download-product-video") {
-          $("#telemetryLog").textContent = `Export queued: full video for ${state.product}`;
+          downloadDataUrl(video.currentSrc, `${state.product}-full.mp4`);
+          $("#telemetryLog").textContent = `Скачивание запущено: полное видео ${state.product}`;
         }
         if (action === "download-selected-clip") {
-          $("#telemetryLog").textContent = `Export queued: selected clip at ${formatDuration(state.seconds)} for ${state.product}`;
+          recordClip(5);
         }
       }
 
@@ -1638,14 +1772,29 @@
         if (actionButton) handleAction(actionButton.dataset.action);
 
         const jumpButton = event.target.closest("[data-jump]");
-        if (jumpButton) setSeconds(jumpButton.dataset.jump);
+        if (jumpButton) {
+          state.reviewMode = "live";
+          seekTo(jumpButton.dataset.jump);
+        }
+
+        const saveButton = event.target.closest("[data-save-img]");
+        if (saveButton) {
+          const item = state.snapshots[Number(saveButton.dataset.saveImg)];
+          if (item && item.img) {
+            downloadDataUrl(item.img, `${state.product}-frame-${Math.round(snapshotTime(item))}s.jpg`);
+          }
+        }
       });
 
-      $("#timelineRange").addEventListener("input", (event) => setSeconds(event.target.value));
-      $("#playButton").addEventListener("click", () => {
+      $("#timelineRange").addEventListener("input", (event) => {
         state.reviewMode = "live";
-        state.playing = !state.playing;
-        render();
+        seekTo(event.target.value);
+      });
+      $("#playButton").addEventListener("click", () => {
+        if (state.recording) return;
+        state.reviewMode = "live";
+        if (video.paused) video.play().catch(() => {});
+        else video.pause();
       });
       $("#productSelect").addEventListener("change", (event) => {
         state.product = event.target.value;
@@ -1660,8 +1809,8 @@
         render();
       });
       $("#searchButton").addEventListener("click", () => {
-        $("#telemetryLog").textContent = `Search refreshed for ${state.product}, ${areas[state.area]}, ${state.date}`;
-        renderRows();
+        render();
+        $("#telemetryLog").textContent = `Найдено сегментов: ${$("#clipCount").textContent} (${state.product}, ${areas[state.area]}, ${state.date})`;
       });
 
       $("#mapCanvas").addEventListener("click", (event) => {
@@ -1669,14 +1818,23 @@
         const xPercent = ((event.clientX - frame.left) / frame.width) * 100;
         // Inverse of the route cursor mapping in renderMapCanvas: x% = 12 + progress * 74.
         const progress = Math.max(0, Math.min(1, (xPercent - 12) / 74));
-        setSeconds(progress * state.duration);
+        state.reviewMode = "live";
+        seekTo(progress * state.duration);
       });
 
-      setInterval(() => {
-        if (!state.playing) return;
-        state.seconds = state.seconds >= state.duration ? 0 : state.seconds + 1;
+      video.addEventListener("loadedmetadata", () => {
+        state.duration = video.duration;
+        const range = $("#timelineRange");
+        range.max = video.duration;
+        range.step = "0.1";
+        seekTo(state.duration * 0.66);
         render();
-      }, 1000);
+      });
+      video.addEventListener("timeupdate", renderTick);
+      ["play", "pause", "ended", "seeked"].forEach((name) => video.addEventListener(name, renderTick));
+      video.addEventListener("error", () => {
+        $("#telemetryLog").textContent = "Видео не загрузилось: проверьте assets/test-flight.mp4";
+      });
 
       render();
     </script>

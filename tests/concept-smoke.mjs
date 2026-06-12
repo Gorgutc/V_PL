@@ -44,6 +44,18 @@ includes("Ortho stitching", "orthophoto stitching analytics item");
 includes("Geolocation", "geolocation analytics item");
 includes('$("#mapCanvas").addEventListener("click"', "trajectory seek on map click");
 includes('aria-label="Позиция воспроизведения"', "timeline range accessible name");
+includes('id="videoPlayer"', "real test video element");
+includes("assets/test-flight.mp4", "test video source path");
+includes('id="miniVideoA"', "sync mini video A");
+includes('id="miniVideoB"', "sync mini video B");
+includes("captureStream", "real clip recorder support");
+includes("toDataURL", "real frame capture for snapshots");
+includes("MediaRecorder", "media recorder clip export");
+record(
+  fs.existsSync(path.join(root, "assets", "test-flight.mp4")),
+  "test video asset exists",
+  "missing assets/test-flight.mp4",
+);
 
 const failed = checks.filter((check) => !check.ok);
 for (const check of checks) {
