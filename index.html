@@ -729,6 +729,9 @@
       .archive-list,
       .event-list,
       .snapshot-list {
+        /* In a scrollable grid, auto tracks can collapse to the row's min-height;
+           size them by content so two-line rows never overlap. */
+        grid-auto-rows: max-content;
         scrollbar-width: thin;
         scrollbar-color: var(--line-strong) transparent;
         overscroll-behavior: contain;
