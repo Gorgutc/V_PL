@@ -485,12 +485,13 @@
         padding: 0.25rem 0.45rem;
       }
 
-      .snap-row {
+      .row.snap-row {
         grid-template-columns: auto minmax(0, 1fr);
-        row-gap: 0.35rem;
+        row-gap: 0.5rem;
+        padding: 0.65rem 0 0.85rem;
       }
 
-      .snap-row.with-thumb {
+      .row.snap-row.with-thumb {
         grid-template-columns: auto auto minmax(0, 1fr);
       }
 
@@ -498,6 +499,17 @@
         grid-column: 1 / -1;
         flex-wrap: wrap;
         justify-content: flex-start;
+      }
+
+      .row-title strong[data-rename] {
+        cursor: text;
+      }
+
+      .row-title strong[data-rename]:hover,
+      .row-title strong[data-rename]:focus-visible {
+        text-decoration: underline dotted;
+        text-decoration-color: var(--dim);
+        text-underline-offset: 3px;
       }
 
       .thumb {
@@ -1867,10 +1879,9 @@
             return `
               <div class="row">
                 <span class="timecode">${formatDuration(t)}</span>
-                <span class="row-title"><strong>${escapeHtml(event.title)}</strong><span>${event.meta}</span></span>
+                <span class="row-title"><strong data-rename="event:${index}" tabindex="0" title="Кликните, чтобы переименовать">${escapeHtml(event.title)}</strong><span>${event.meta}</span></span>
                 <span class="row-actions">
                   <button type="button" data-jump="${t.toFixed(1)}">Перейти</button>
-                  <button type="button" data-rename="event:${index}" title="Переименовать" aria-label="Переименовать событие">✎</button>
                   <button type="button" data-delete="event:${index}" title="Удалить" aria-label="Удалить событие">✕</button>
                 </span>
               </div>
@@ -1888,11 +1899,10 @@
               <div class="row snap-row${item.img ? " with-thumb" : ""}">
                 <span class="timecode">${formatDuration(t)}</span>
                 ${item.img ? `<img class="thumb" src="${item.img}" alt="" />` : ""}
-                <span class="row-title"><strong>${escapeHtml(item.title)}</strong><span>${item.meta}</span></span>
+                <span class="row-title"><strong data-rename="snap:${item.index}" tabindex="0" title="Кликните, чтобы переименовать">${escapeHtml(item.title)}</strong><span>${item.meta}</span></span>
                 <span class="row-actions">
                   <button type="button" data-jump="${t.toFixed(1)}">Открыть</button>
                   <button type="button" data-save-img="${item.index}" title="Скачать этот кадр в формате JPG">Скачать JPG</button>
-                  <button type="button" data-rename="snap:${item.index}" title="Переименовать" aria-label="Переименовать запись">✎</button>
                   <button type="button" data-delete="snap:${item.index}" title="Удалить" aria-label="Удалить запись">✕</button>
                 </span>
               </div>
@@ -2078,6 +2088,9 @@
       $("#expandBackdrop").addEventListener("click", () => toggleExpand(expandedPanel));
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && expandedPanel) toggleExpand(expandedPanel);
+        if (event.key === "Enter" && event.target.matches && event.target.matches("strong[data-rename]")) {
+          startRename(event.target);
+        }
       });
 
       document.addEventListener("click", (event) => {
