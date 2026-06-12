@@ -502,6 +502,70 @@
         gap: 0.3rem;
       }
 
+      .header-tools {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+      }
+
+      .icon-button {
+        min-height: 1.9rem;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .block-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .panel.expanded {
+        position: fixed;
+        inset: 1.25rem;
+        z-index: 60;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+      }
+
+      .panel.expanded .panel-body {
+        display: grid;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .panel.expanded .video-stage {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .sync-panel.expanded .panel-body {
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 0.6rem;
+      }
+
+      .panel.expanded .mini-videos,
+      .panel.expanded .mini-video {
+        height: 100%;
+        min-height: 0;
+      }
+
+      #expandBackdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: rgba(8, 10, 11, 0.72);
+        backdrop-filter: blur(2px);
+      }
+
+      #expandBackdrop[hidden] {
+        display: none;
+      }
+
       .timecode {
         color: var(--cyan);
         font-variant-numeric: tabular-nums;
@@ -1199,7 +1263,10 @@
                 <h2 id="videoTitle">Live video / VP-104</h2>
                 <p class="subtle" id="videoSubtitle">RTSP source bound to product, time, and route</p>
               </div>
-              <span class="pill"><span class="dot live"></span><span id="streamState">live 25 fps</span></span>
+              <span class="header-tools">
+                <span class="pill"><span class="dot live"></span><span id="streamState">live 25 fps</span></span>
+                <button type="button" class="icon-button" data-expand title="Развернуть/свернуть" aria-label="Развернуть видео">⛶</button>
+              </span>
             </div>
             <div class="panel-body">
               <div class="video-stage">
@@ -1275,9 +1342,12 @@
                     </div>
                   </div>
                   <div class="event-block">
-                    <div class="panel-title" style="margin-bottom: 0.45rem">
-                      <h3>События маршрута</h3>
-                      <p class="subtle">Клик — переход, двойной клик по карте — своё событие</p>
+                    <div class="block-head">
+                      <div class="panel-title">
+                        <h3>События маршрута</h3>
+                        <p class="subtle">Клик — переход, двойной клик по карте — своё событие</p>
+                      </div>
+                      <button type="button" class="icon-button" data-clear="events" title="Удалить все события">Очистить</button>
                     </div>
                     <div class="event-list" id="eventList"></div>
                   </div>
@@ -1291,6 +1361,7 @@
                   <h2>Сохранённые кадры и метки</h2>
                   <p class="subtle">Отдельное хранение для быстрого просмотра</p>
                 </div>
+                <button type="button" class="icon-button" data-clear="snapshots" title="Удалить все кадры и метки">Очистить</button>
               </div>
               <div class="panel-body">
                 <div class="snapshot-list" id="snapshotList"></div>
@@ -1320,7 +1391,10 @@
                 <h2>Синхронный просмотр</h2>
                 <p class="subtle">Выбранные видео на одной шкале</p>
               </div>
-              <span class="pill" id="syncMode">master/slave</span>
+              <span class="header-tools">
+                <span class="pill" id="syncMode">master/slave</span>
+                <button type="button" class="icon-button" data-expand title="Развернуть/свернуть" aria-label="Развернуть синхронный просмотр">⛶</button>
+              </span>
             </div>
             <div class="panel-body control-stack">
               <div class="mini-videos">
@@ -1378,6 +1452,7 @@
           </section>
         </aside>
       </section>
+      <div id="expandBackdrop" hidden></div>
     </main>
 
     <script>
@@ -1388,11 +1463,10 @@
         duration: 52,
         reviewMode: "live",
         sync: true,
-        addedLabels: 0,
         recording: false,
         snapshots: [
-          { at: 0.55, title: "Кадр с объектом", meta: "conf 0.79", img: null },
-          { at: 0.66, title: "Операторская метка", meta: "route km 14.2", img: null },
+          { at: 0.55, title: "Кадр с объектом", meta: "conf 0.79", img: null, kind: "snapshot" },
+          { at: 0.66, title: "Операторская метка", meta: "route km 14.2", img: null, kind: "label" },
         ],
         events: [
           { at: 0.18, title: "Вход в область", meta: "north sector boundary" },
@@ -1472,11 +1546,32 @@
 
       const captureCanvas = document.createElement("canvas");
 
+      function drawMarksOnCanvas(ctx, w, h, seconds) {
+        const visible = state.snapshots.filter(
+          (item) => item.x != null && Math.abs(snapshotTime(item) - seconds) < 1.5,
+        );
+        if (!visible.length) return;
+        ctx.lineWidth = Math.max(2, Math.round(w / 420));
+        ctx.font = `${Math.max(13, Math.round(w / 48))}px sans-serif`;
+        visible.forEach((item) => {
+          const x = (item.x / 100) * w;
+          const y = (item.y / 100) * h;
+          const boxW = w * 0.075;
+          const boxH = h * 0.085;
+          ctx.strokeStyle = "#4cc9d8";
+          ctx.strokeRect(x - boxW / 2, y - boxH / 2, boxW, boxH);
+          ctx.fillStyle = "#d2f4f8";
+          ctx.fillText(item.title, x - boxW / 2, y + boxH / 2 + Math.max(16, h / 30));
+        });
+      }
+
       function captureFrame() {
         if (!video.videoWidth) return null;
         captureCanvas.width = video.videoWidth;
         captureCanvas.height = video.videoHeight;
-        captureCanvas.getContext("2d").drawImage(video, 0, 0);
+        const ctx = captureCanvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+        drawMarksOnCanvas(ctx, captureCanvas.width, captureCanvas.height, currentSeconds());
         try {
           return captureCanvas.toDataURL("image/jpeg", 0.72);
         } catch (error) {
@@ -1509,11 +1604,32 @@
 
       function recordClip(lengthSeconds) {
         if (state.recording) return;
-        const stream = video.captureStream
-          ? video.captureStream()
-          : video.mozCaptureStream
-            ? video.mozCaptureStream()
-            : null;
+        // Compose video + marks on a canvas so annotations are burned into the clip.
+        let stream = null;
+        let paintTimer = 0;
+        if (video.videoWidth && typeof MediaRecorder !== "undefined") {
+          const burn = document.createElement("canvas");
+          burn.width = video.videoWidth;
+          burn.height = video.videoHeight;
+          const burnCtx = burn.getContext("2d");
+          const paint = () => {
+            burnCtx.drawImage(video, 0, 0, burn.width, burn.height);
+            drawMarksOnCanvas(burnCtx, burn.width, burn.height, currentSeconds());
+          };
+          paint();
+          if (burn.captureStream) {
+            stream = burn.captureStream(25);
+            paintTimer = setInterval(paint, 40);
+          }
+        }
+        const burning = Boolean(paintTimer);
+        if (!stream) {
+          stream = video.captureStream
+            ? video.captureStream()
+            : video.mozCaptureStream
+              ? video.mozCaptureStream()
+              : null;
+        }
         if (!stream || typeof MediaRecorder === "undefined") {
           $("#telemetryLog").textContent = "Запись клипа не поддерживается: скачиваю весь файл";
           downloadDataUrl(video.currentSrc, `${state.product}-full.mp4`);
@@ -1532,15 +1648,16 @@
           if (event.data.size) chunks.push(event.data);
         };
         recorder.onstop = () => {
+          if (paintTimer) clearInterval(paintTimer);
           state.recording = false;
           const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
           downloadDataUrl(url, `${clipProduct}-clip-${Math.round(clipStart)}s.webm`);
           setTimeout(() => URL.revokeObjectURL(url), 10000);
-          $("#telemetryLog").textContent = `Клип сохранён: ${lengthSeconds}s от ${formatDuration(clipStart)}`;
+          $("#telemetryLog").textContent = `Клип сохранён${burning ? " с метками" : ""}: ${lengthSeconds}s от ${formatDuration(clipStart)}`;
           renderTick();
         };
         state.recording = true;
-        $("#telemetryLog").textContent = `Запись клипа: ${lengthSeconds}s от ${formatDuration(clipStart)}…`;
+        $("#telemetryLog").textContent = `Запись клипа${burning ? " с метками" : ""}: ${lengthSeconds}s от ${formatDuration(clipStart)}…`;
         video.play().catch(() => {});
         recorder.start();
         setTimeout(() => recorder.stop(), lengthSeconds * 1000);
@@ -1684,6 +1801,7 @@
                 <span class="row-actions">
                   <button type="button" data-jump="${t.toFixed(1)}">Jump</button>
                   <button type="button" data-rename="event:${index}" title="Переименовать" aria-label="Переименовать событие">✎</button>
+                  <button type="button" data-delete="event:${index}" title="Удалить" aria-label="Удалить событие">✕</button>
                 </span>
               </div>
             `;
@@ -1705,6 +1823,7 @@
                   <button type="button" data-jump="${t.toFixed(1)}">Open</button>
                   ${item.img ? `<button type="button" data-save-img="${item.index}">JPG</button>` : ""}
                   <button type="button" data-rename="snap:${item.index}" title="Переименовать" aria-label="Переименовать запись">✎</button>
+                  <button type="button" data-delete="snap:${item.index}" title="Удалить" aria-label="Удалить запись">✕</button>
                 </span>
               </div>
             `;
@@ -1771,7 +1890,9 @@
         const matches = renderRows();
         $("#videoTitle").textContent = product.title;
         $("#clipCount").textContent = matches.length;
-        $("#labelCount").textContent = matches.reduce((sum, seg) => sum + seg.labels, 0) + state.addedLabels;
+        const added = addedLabelCount();
+        $("#labelCount").textContent = matches.reduce((sum, seg) => sum + seg.labels, 0) + added;
+        $("#targetLabel").textContent = added ? `Target object / label +${added}` : "Target object / conf 0.82";
         $("#snapshotCount").textContent = state.snapshots.length;
         $("#syncDrift").textContent = product.drift;
         $("#syncButton").textContent = state.sync ? "Sync on" : "Sync off";
@@ -1785,6 +1906,10 @@
         renderTick();
       }
 
+      function addedLabelCount() {
+        return state.snapshots.filter((item) => item.added && item.kind === "label").length;
+      }
+
       function saveSnapshot(kind, point) {
         if (!video.videoWidth) {
           $("#telemetryLog").textContent = "Видео ещё не загружено: снимок недоступен";
@@ -1794,9 +1919,11 @@
         const frame = `F-${Math.round(seconds * 25)}`;
         const item = {
           time: seconds,
-          title: kind === "label" ? `Метка цели ${state.addedLabels + 1}` : `Снимок ${state.snapshots.length + 1}`,
+          title: kind === "label" ? `Метка цели ${addedLabelCount() + 1}` : `Снимок ${state.snapshots.length + 1}`,
           meta: `${frame} / ${state.product} / ${areas[state.area]}`,
-          img: captureFrame(),
+          img: null,
+          kind,
+          added: true,
         };
         if (point) {
           item.x = point.x;
@@ -1804,10 +1931,8 @@
           item.meta += ` / точка ${point.x}%, ${point.y}%`;
         }
         state.snapshots.push(item);
-        if (kind === "label") {
-          state.addedLabels += 1;
-          $("#targetLabel").textContent = `Target object / label +${state.addedLabels}`;
-        }
+        // Capture after push so a freshly placed mark is burned into its own frame.
+        item.img = captureFrame();
         render();
       }
 
@@ -1869,10 +1994,52 @@
         input.addEventListener("click", (event) => event.stopPropagation());
       }
 
+      let expandedPanel = null;
+
+      function toggleExpand(panel) {
+        if (!panel) return;
+        const expand = expandedPanel !== panel;
+        if (expandedPanel) expandedPanel.classList.remove("expanded");
+        expandedPanel = expand ? panel : null;
+        if (expand) panel.classList.add("expanded");
+        $("#expandBackdrop").hidden = !expand;
+      }
+
+      $("#expandBackdrop").addEventListener("click", () => toggleExpand(expandedPanel));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && expandedPanel) toggleExpand(expandedPanel);
+      });
+
       document.addEventListener("click", (event) => {
         const renameButton = event.target.closest("[data-rename]");
         if (renameButton) {
           startRename(renameButton);
+          return;
+        }
+
+        const expandButton = event.target.closest("[data-expand]");
+        if (expandButton) {
+          toggleExpand(expandButton.closest(".panel"));
+          return;
+        }
+
+        const clearButton = event.target.closest("[data-clear]");
+        if (clearButton) {
+          const target = clearButton.dataset.clear;
+          if (target === "events") state.events = [];
+          else state.snapshots = [];
+          render();
+          $("#telemetryLog").textContent =
+            target === "events" ? "Все события маршрута удалены" : "Все кадры и метки удалены";
+          return;
+        }
+
+        const deleteButton = event.target.closest("[data-delete]");
+        if (deleteButton) {
+          const [kind, indexRaw] = deleteButton.dataset.delete.split(":");
+          if (kind === "event") state.events.splice(Number(indexRaw), 1);
+          else state.snapshots.splice(Number(indexRaw), 1);
+          render();
           return;
         }
 

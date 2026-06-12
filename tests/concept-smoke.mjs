@@ -56,6 +56,11 @@ includes("data-rename", "rename controls for frames and events");
 includes('$("#videoPlayer").addEventListener("click"', "click-to-place label on video");
 includes('$("#mapCanvas").addEventListener("dblclick"', "double-click creates route event");
 includes("пользовательское событие", "user-created event marker");
+includes("data-delete", "delete controls for events and snapshots");
+includes("data-clear", "clear-all controls");
+includes("data-expand", "expand controls for video and sync panels");
+includes('id="expandBackdrop"', "expand backdrop element");
+includes("drawMarksOnCanvas", "marks burned into downloaded frames and clips");
 record(
   fs.existsSync(path.join(root, "assets", "test-flight.mp4")),
   "test video asset exists",
