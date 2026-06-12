@@ -51,6 +51,9 @@ includes('id="miniVideoB"', "sync mini video B");
 includes("captureStream", "real clip recorder support");
 includes("toDataURL", "real frame capture for snapshots");
 includes("MediaRecorder", "media recorder clip export");
+includes('id="userMarks"', "user-placed marks layer");
+includes("data-rename", "rename controls for frames and events");
+includes('$("#videoPlayer").addEventListener("click"', "click-to-place label on video");
 record(
   fs.existsSync(path.join(root, "assets", "test-flight.mp4")),
   "test video asset exists",

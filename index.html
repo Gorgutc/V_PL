@@ -335,6 +335,7 @@
         height: 100%;
         object-fit: cover;
         background: #000;
+        cursor: crosshair;
       }
 
       #annotationLayer {
@@ -668,6 +669,26 @@
 
       .annotation--friendly span {
         color: #d9f3c8;
+      }
+
+      .annotation--user::before {
+        border-color: var(--cyan);
+        box-shadow: 0 0 0 1px rgba(76, 201, 216, 0.2);
+      }
+
+      .annotation--user span {
+        color: #d2f4f8;
+      }
+
+      .rename-input {
+        width: 100%;
+        min-height: 1.5rem;
+        padding: 0.05rem 0.3rem;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+        background: var(--surface-2);
+        color: var(--text);
+        font-size: 0.82rem;
       }
 
       .annotation--direction {
@@ -1190,6 +1211,7 @@
                   muted
                   playsinline
                   aria-label="Тестовое видео изделия"
+                  title="Клик по видео ставит метку цели в выбранной точке"
                 ></video>
                 <div id="annotationLayer" aria-hidden="true">
                   <div class="annotation" style="left: 58%; top: 45%">
@@ -1199,6 +1221,7 @@
                     <span>Свое изделие / VP-217</span>
                   </div>
                   <div class="annotation--direction" style="left: 47%; top: 56%; --bearing: -45deg"></div>
+                  <div id="userMarks"></div>
                 </div>
                 <div class="video-overlay">
                   <div class="video-meta">
@@ -1612,15 +1635,46 @@
         return item.time != null ? item.time : item.at * state.duration;
       }
 
+      function escapeHtml(value) {
+        return String(value).replace(
+          /[&<>"]/g,
+          (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch],
+        );
+      }
+
+      let lastMarksKey = "";
+
+      function renderUserMarks() {
+        const seconds = currentSeconds();
+        const visible = state.snapshots.filter(
+          (item) => item.x != null && Math.abs(snapshotTime(item) - seconds) < 1.5,
+        );
+        const key = visible.map((item) => `${item.title}@${item.x},${item.y}`).join("|");
+        if (key === lastMarksKey) return;
+        lastMarksKey = key;
+        $("#userMarks").innerHTML = visible
+          .map(
+            (item) => `
+              <div class="annotation annotation--user" style="left: ${item.x}%; top: ${item.y}%">
+                <span>${escapeHtml(item.title)}</span>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
       function renderRows() {
         $("#eventList").innerHTML = state.events
-          .map((event) => {
+          .map((event, index) => {
             const t = event.at * state.duration;
             return `
               <div class="row">
                 <span class="timecode">${formatDuration(t)}</span>
-                <span class="row-title"><strong>${event.title}</strong><span>${event.meta}</span></span>
-                <button type="button" data-jump="${t.toFixed(1)}">Jump</button>
+                <span class="row-title"><strong>${escapeHtml(event.title)}</strong><span>${event.meta}</span></span>
+                <span class="row-actions">
+                  <button type="button" data-jump="${t.toFixed(1)}">Jump</button>
+                  <button type="button" data-rename="event:${index}" title="Переименовать" aria-label="Переименовать событие">✎</button>
+                </span>
               </div>
             `;
           })
@@ -1636,10 +1690,11 @@
               <div class="row${item.img ? " with-thumb" : ""}">
                 <span class="timecode">${formatDuration(t)}</span>
                 ${item.img ? `<img class="thumb" src="${item.img}" alt="" />` : ""}
-                <span class="row-title"><strong>${item.title}</strong><span>${item.meta}</span></span>
+                <span class="row-title"><strong>${escapeHtml(item.title)}</strong><span>${item.meta}</span></span>
                 <span class="row-actions">
                   <button type="button" data-jump="${t.toFixed(1)}">Open</button>
                   ${item.img ? `<button type="button" data-save-img="${item.index}">JPG</button>` : ""}
+                  <button type="button" data-rename="snap:${item.index}" title="Переименовать" aria-label="Переименовать запись">✎</button>
                 </span>
               </div>
             `;
@@ -1697,6 +1752,7 @@
         $("#playButton").textContent = video.paused ? "Play" : "Pause";
         renderMapCanvas();
         renderTelemetry();
+        renderUserMarks();
         syncMiniVideos(false);
       }
 
@@ -1719,19 +1775,25 @@
         renderTick();
       }
 
-      function saveSnapshot(kind) {
+      function saveSnapshot(kind, point) {
         if (!video.videoWidth) {
           $("#telemetryLog").textContent = "Видео ещё не загружено: снимок недоступен";
           return;
         }
         const seconds = currentSeconds();
         const frame = `F-${Math.round(seconds * 25)}`;
-        state.snapshots.push({
+        const item = {
           time: seconds,
-          title: kind === "label" ? "Метка цели сохранена" : "Снимок сохранён",
+          title: kind === "label" ? `Метка цели ${state.addedLabels + 1}` : `Снимок ${state.snapshots.length + 1}`,
           meta: `${frame} / ${state.product} / ${areas[state.area]}`,
           img: captureFrame(),
-        });
+        };
+        if (point) {
+          item.x = point.x;
+          item.y = point.y;
+          item.meta += ` / точка ${point.x}%, ${point.y}%`;
+        }
+        state.snapshots.push(item);
         if (kind === "label") {
           state.addedLabels += 1;
           $("#targetLabel").textContent = `Target object / label +${state.addedLabels}`;
@@ -1767,7 +1829,43 @@
         }
       }
 
+      function startRename(button) {
+        const [kind, indexRaw] = button.dataset.rename.split(":");
+        const target = kind === "event" ? state.events[Number(indexRaw)] : state.snapshots[Number(indexRaw)];
+        if (!target) return;
+        const titleNode = button.closest(".row").querySelector(".row-title strong");
+        if (!titleNode || titleNode.querySelector("input")) return;
+        const input = document.createElement("input");
+        input.className = "rename-input";
+        input.value = target.title;
+        input.setAttribute("aria-label", "Новое название");
+        titleNode.textContent = "";
+        titleNode.appendChild(input);
+        input.focus();
+        input.select();
+        let done = false;
+        const commit = (save) => {
+          if (done) return;
+          done = true;
+          const value = input.value.trim();
+          if (save && value) target.title = value;
+          render();
+        };
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") commit(true);
+          if (event.key === "Escape") commit(false);
+        });
+        input.addEventListener("blur", () => commit(true));
+        input.addEventListener("click", (event) => event.stopPropagation());
+      }
+
       document.addEventListener("click", (event) => {
+        const renameButton = event.target.closest("[data-rename]");
+        if (renameButton) {
+          startRename(renameButton);
+          return;
+        }
+
         const actionButton = event.target.closest("[data-action]");
         if (actionButton) handleAction(actionButton.dataset.action);
 
@@ -1784,6 +1882,13 @@
             downloadDataUrl(item.img, `${state.product}-frame-${Math.round(snapshotTime(item))}s.jpg`);
           }
         }
+      });
+
+      $("#videoPlayer").addEventListener("click", (event) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = Math.round(((event.clientX - rect.left) / rect.width) * 1000) / 10;
+        const y = Math.round(((event.clientY - rect.top) / rect.height) * 1000) / 10;
+        saveSnapshot("label", { x, y });
       });
 
       $("#timelineRange").addEventListener("input", (event) => {
