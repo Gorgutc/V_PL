@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>V_PL Video Console Concept</title>
+    <title>V_PL — видеоконсоль (концепт)</title>
     <meta
       name="description"
-      content="Local HTML concept for synchronized RTSP video, map, telemetry, archive search, snapshots, and analytics review."
+      content="Локальный HTML-концепт: синхронное RTSP-видео, карта, телеметрия, поиск по архиву, снимки и видеоаналитика."
     />
     <style>
       :root {
@@ -1171,17 +1171,17 @@
           <div class="brand-mark" aria-hidden="true">V</div>
           <div class="brand-copy">
             <h1>V_PL / видео, маршрут, телеметрия</h1>
-            <p class="subtle">RTSP -> live -> archive -> sync review</p>
+            <p class="subtle">RTSP → эфир → архив → синхронный просмотр</p>
           </div>
         </div>
         <div class="status-strip" aria-label="Статусы сервисов">
-          <span class="pill"><span class="dot live"></span>RTSP live</span>
-          <span class="pill"><span class="dot sync"></span>GeoServer ready</span>
-          <span class="pill"><span class="dot warn"></span>Analytics queue</span>
+          <span class="pill"><span class="dot live"></span>RTSP эфир</span>
+          <span class="pill"><span class="dot sync"></span>GeoServer готов</span>
+          <span class="pill"><span class="dot warn"></span>Очередь аналитики</span>
         </div>
         <div class="sync-strip">
-          <span class="pill">Master clock <strong id="sharedClock">12:42:18.240</strong></span>
-          <button class="primary" type="button" data-action="toggle-sync" id="syncButton">Sync on</button>
+          <span class="pill">Общее время <strong id="sharedClock">12:42:18.240</strong></span>
+          <button class="primary" type="button" data-action="toggle-sync" id="syncButton">Синхр. вкл</button>
         </div>
       </header>
 
@@ -1235,8 +1235,8 @@
                 <strong id="snapshotCount">4</strong>
               </div>
               <div class="metric">
-                <span>Sync drift</span>
-                <strong id="syncDrift">+0.08s</strong>
+                <span>Рассинхрон</span>
+                <strong id="syncDrift">+0.08с</strong>
               </div>
             </div>
 
@@ -1260,11 +1260,11 @@
           <section class="panel video-panel" data-panel="live-video">
             <div class="panel-header">
               <div class="panel-title">
-                <h2 id="videoTitle">Live video / VP-104</h2>
-                <p class="subtle" id="videoSubtitle">RTSP source bound to product, time, and route</p>
+                <h2 id="videoTitle">Эфир / VP-104</h2>
+                <p class="subtle" id="videoSubtitle">RTSP-источник привязан к изделию, времени и маршруту</p>
               </div>
               <span class="header-tools">
-                <span class="pill"><span class="dot live"></span><span id="streamState">live 25 fps</span></span>
+                <span class="pill"><span class="dot live"></span><span id="streamState">эфир 25 к/с</span></span>
                 <button type="button" class="icon-button" data-expand title="Развернуть/свернуть" aria-label="Развернуть видео">⛶</button>
               </span>
             </div>
@@ -1282,7 +1282,7 @@
                 ></video>
                 <div id="annotationLayer" aria-hidden="true">
                   <div class="annotation" style="left: 58%; top: 45%">
-                    <span id="targetLabel">Target object / conf 0.82</span>
+                    <span id="targetLabel">Объект цели / увер. 0.82</span>
                   </div>
                   <div class="annotation annotation--friendly" style="left: 30%; top: 64%">
                     <span>Свое изделие / VP-217</span>
@@ -1292,13 +1292,13 @@
                 </div>
                 <div class="video-overlay">
                   <div class="video-meta">
-                    <span class="pill">Time <strong id="selectedTime">12:42:18.240</strong></span>
-                    <span class="pill">Route km <strong id="routeKm">14.2</strong></span>
-                    <span class="pill">Frame <strong id="frameId">F-18420</strong></span>
+                    <span class="pill">Время <strong id="selectedTime">12:42:18.240</strong></span>
+                    <span class="pill">Км маршрута <strong id="routeKm">14.2</strong></span>
+                    <span class="pill">Кадр <strong id="frameId">F-18420</strong></span>
                   </div>
                   <div class="timeline">
                     <div class="timeline-top">
-                      <span>Shared playback position</span>
+                      <span>Общая позиция воспроизведения</span>
                       <span id="timelineLabel">00:18:24 / 00:27:30</span>
                     </div>
                     <input
@@ -1310,10 +1310,10 @@
                       aria-label="Позиция воспроизведения"
                     />
                     <div class="transport">
-                      <button type="button" id="playButton">Pause</button>
+                      <button type="button" id="playButton">Пауза</button>
                       <button type="button" data-action="save-snapshot">Снимок</button>
                       <button type="button" data-action="save-target-label">Метка цели</button>
-                      <button class="danger" type="button" data-action="replay-last-minute">-1 min</button>
+                      <button class="danger" type="button" data-action="replay-last-minute">−1 мин</button>
                     </div>
                   </div>
                 </div>
@@ -1328,7 +1328,7 @@
                   <h2>Маршрут на карте</h2>
                   <p class="subtle">Текущая позиция, события, сохранённые кадры</p>
                 </div>
-                <span class="pill">Layer <strong id="mapLayer">route + orthophoto draft</strong></span>
+                <span class="pill">Слой <strong id="mapLayer">маршрут + ортофото (черновик)</strong></span>
               </div>
               <div class="panel-body">
                 <div class="map-grid">
@@ -1336,9 +1336,9 @@
                     <canvas id="mapCanvas" width="780" height="460" aria-label="Синтетическая карта маршрута"></canvas>
                     <div id="mapCursor" aria-hidden="true"></div>
                     <div class="map-legend">
-                      <span class="pill"><span class="dot sync"></span>current</span>
-                      <span class="pill"><span class="dot warn"></span>event</span>
-                      <span class="pill"><span class="dot live"></span>saved frame</span>
+                      <span class="pill"><span class="dot sync"></span>позиция</span>
+                      <span class="pill"><span class="dot warn"></span>событие</span>
+                      <span class="pill"><span class="dot live"></span>сохр. кадр</span>
                     </div>
                   </div>
                   <div class="event-block">
@@ -1377,11 +1377,11 @@
                 <h2>Телеметрия</h2>
                 <p class="subtle">Значения на выбранное время</p>
               </div>
-              <span class="pill">1 Hz / synced</span>
+              <span class="pill">1 Гц / синхронно</span>
             </div>
             <div class="panel-body telemetry-card">
               <div id="telemetryBars"></div>
-              <p class="log-line" id="telemetryLog">Sync source: master video clock</p>
+              <p class="log-line" id="telemetryLog">Источник синхронизации: общие часы видео</p>
             </div>
           </section>
 
@@ -1392,7 +1392,7 @@
                 <p class="subtle">Выбранные видео на одной шкале</p>
               </div>
               <span class="header-tools">
-                <span class="pill" id="syncMode">master/slave</span>
+                <span class="pill" id="syncMode">ведущий/ведомые</span>
                 <button type="button" class="icon-button" data-expand title="Развернуть/свернуть" aria-label="Развернуть синхронный просмотр">⛶</button>
               </span>
             </div>
@@ -1400,15 +1400,15 @@
               <div class="mini-videos">
                 <div class="mini-video">
                   <video id="miniVideoA" src="assets/test-flight.mp4" preload="metadata" muted playsinline></video>
-                  <span id="miniA">VP-104 cam A / +0.0s</span>
+                  <span id="miniA">VP-104 кам. A / +0.0с</span>
                 </div>
                 <div class="mini-video">
                   <video id="miniVideoB" src="assets/test-flight.mp4" preload="metadata" muted playsinline></video>
-                  <span id="miniB">VP-104 cam B / +3.0s</span>
+                  <span id="miniB">VP-104 кам. B / +3.0с</span>
                 </div>
               </div>
               <div class="button-row">
-                <button type="button" data-action="toggle-sync">Sync on/off</button>
+                <button type="button" data-action="toggle-sync">Синхр. вкл/выкл</button>
                 <button type="button" data-action="save-snapshot">Сохранить кадр</button>
               </div>
             </div>
@@ -1424,28 +1424,28 @@
             <div class="panel-body analytics-list">
               <div class="analytics-grid">
                 <div class="analytics-item">
-                  <strong>Orthophoto</strong>
-                  <span>Metashape queue, 63%</span>
+                  <strong>Ортофотоплан</strong>
+                  <span>очередь Metashape, 63%</span>
                 </div>
                 <div class="analytics-item">
                   <strong>GeoServer</strong>
-                  <span>Draft layer ready</span>
+                  <span>черновой слой готов</span>
                 </div>
                 <div class="analytics-item">
-                  <strong>Last quality frame</strong>
-                  <span id="qualityFrame">F-18420 / conf 0.82</span>
+                  <strong>Последний кач. кадр</strong>
+                  <span id="qualityFrame">F-18420 / увер. 0.82</span>
                 </div>
                 <div class="analytics-item">
-                  <strong>Change analysis</strong>
-                  <span>3 orthophoto series</span>
+                  <strong>Анализ изменений</strong>
+                  <span>3 серии ортофото</span>
                 </div>
                 <div class="analytics-item">
-                  <strong>Ortho stitching</strong>
-                  <span>tile queue 4/9, north</span>
+                  <strong>Склейка ортофото</strong>
+                  <span>очередь тайлов 4/9, север</span>
                 </div>
                 <div class="analytics-item">
-                  <strong>Geolocation</strong>
-                  <span>frame to WGS84 bind</span>
+                  <strong>Геолокация</strong>
+                  <span>привязка кадра к WGS84</span>
                 </div>
               </div>
             </div>
@@ -1465,21 +1465,21 @@
         sync: true,
         recording: false,
         snapshots: [
-          { at: 0.55, title: "Кадр с объектом", meta: "conf 0.79", img: null, kind: "snapshot" },
-          { at: 0.66, title: "Операторская метка", meta: "route km 14.2", img: null, kind: "label" },
+          { at: 0.55, title: "Кадр с объектом", meta: "увер. 0.79", img: null, kind: "snapshot" },
+          { at: 0.66, title: "Операторская метка", meta: "км маршрута 14.2", img: null, kind: "label" },
         ],
         events: [
-          { at: 0.18, title: "Вход в область", meta: "north sector boundary" },
-          { at: 0.55, title: "Первый качественный кадр", meta: "target object visible" },
-          { at: 0.66, title: "Операторский фокус", meta: "operator focus" },
-          { at: 0.97, title: "Финиш", meta: "fast replay window" },
+          { at: 0.18, title: "Вход в область", meta: "граница северного сектора" },
+          { at: 0.55, title: "Первый качественный кадр", meta: "объект цели в кадре" },
+          { at: 0.66, title: "Операторский фокус", meta: "фокус оператора" },
+          { at: 0.97, title: "Финиш", meta: "окно быстрого повтора" },
         ],
       };
 
       const products = {
-        "VP-104": { title: "Live video / VP-104", drift: "+0.08s" },
-        "VP-217": { title: "Archive review / VP-217", drift: "+0.03s" },
-        "VP-319": { title: "Sync review / VP-319", drift: "+0.11s" },
+        "VP-104": { title: "Эфир / VP-104", drift: "+0.08с" },
+        "VP-217": { title: "Архив / VP-217", drift: "+0.03с" },
+        "VP-319": { title: "Синхро-обзор / VP-319", drift: "+0.11с" },
       };
 
       const areas = {
@@ -1688,10 +1688,25 @@
           ctx.stroke();
         }
 
-        ctx.fillStyle = "rgba(76,201,216,0.08)";
-        ctx.fillRect(w * 0.1, h * 0.16, w * 0.33, h * 0.22);
-        ctx.fillStyle = "rgba(214,164,81,0.08)";
-        ctx.fillRect(w * 0.52, h * 0.42, w * 0.31, h * 0.24);
+        // Search areas: the zone selected in the area filter is highlighted.
+        const zones = {
+          north: { x: 0.1, y: 0.12, w: 0.33, h: 0.22, color: "76, 201, 216" },
+          east: { x: 0.55, y: 0.16, w: 0.3, h: 0.2, color: "214, 164, 81" },
+          delta: { x: 0.4, y: 0.56, w: 0.31, h: 0.24, color: "182, 161, 230" },
+        };
+        Object.entries(zones).forEach(([key, zone]) => {
+          const active = key === state.area;
+          ctx.fillStyle = `rgba(${zone.color}, ${active ? 0.16 : 0.05})`;
+          ctx.fillRect(w * zone.x, h * zone.y, w * zone.w, h * zone.h);
+          if (active) {
+            ctx.strokeStyle = `rgba(${zone.color}, 0.55)`;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(w * zone.x, h * zone.y, w * zone.w, h * zone.h);
+          }
+          ctx.fillStyle = active ? "rgba(237, 241, 242, 0.78)" : "rgba(170, 180, 184, 0.4)";
+          ctx.font = "12px sans-serif";
+          ctx.fillText(areas[key], w * zone.x + 8, h * zone.y + 17);
+        });
 
         const route = [
           [0.12, 0.76],
@@ -1740,10 +1755,10 @@
 
       function renderTelemetry() {
         const values = [
-          ["Speed", telemetryValue(72, 11), "%"],
-          ["Signal", telemetryValue(86, 7), "%"],
-          ["Altitude", telemetryValue(54, 18), "%"],
-          ["Quality", telemetryValue(81, 9), "%"],
+          ["Скорость", telemetryValue(72, 11), "%"],
+          ["Сигнал", telemetryValue(86, 7), "%"],
+          ["Высота", telemetryValue(54, 18), "%"],
+          ["Качество", telemetryValue(81, 9), "%"],
         ];
         $("#telemetryBars").innerHTML = values
           .map(
@@ -1799,7 +1814,7 @@
                 <span class="timecode">${formatDuration(t)}</span>
                 <span class="row-title"><strong>${escapeHtml(event.title)}</strong><span>${event.meta}</span></span>
                 <span class="row-actions">
-                  <button type="button" data-jump="${t.toFixed(1)}">Jump</button>
+                  <button type="button" data-jump="${t.toFixed(1)}">Перейти</button>
                   <button type="button" data-rename="event:${index}" title="Переименовать" aria-label="Переименовать событие">✎</button>
                   <button type="button" data-delete="event:${index}" title="Удалить" aria-label="Удалить событие">✕</button>
                 </span>
@@ -1820,8 +1835,8 @@
                 ${item.img ? `<img class="thumb" src="${item.img}" alt="" />` : ""}
                 <span class="row-title"><strong>${escapeHtml(item.title)}</strong><span>${item.meta}</span></span>
                 <span class="row-actions">
-                  <button type="button" data-jump="${t.toFixed(1)}">Open</button>
-                  ${item.img ? `<button type="button" data-save-img="${item.index}">JPG</button>` : ""}
+                  <button type="button" data-jump="${t.toFixed(1)}">Открыть</button>
+                  ${item.img ? `<button type="button" data-save-img="${item.index}" title="Скачать кадр в JPG">JPG</button>` : ""}
                   <button type="button" data-rename="snap:${item.index}" title="Переименовать" aria-label="Переименовать запись">✎</button>
                   <button type="button" data-delete="snap:${item.index}" title="Удалить" aria-label="Удалить запись">✕</button>
                 </span>
@@ -1841,7 +1856,7 @@
               <div class="row">
                 <span class="timecode">${formatDuration(start)}</span>
                 <span class="row-title"><strong>${seg.product} / ${seg.note}</strong><span>${areas[seg.area]}, метки ${seg.labels}</span></span>
-                <button type="button" data-jump="${start.toFixed(1)}">View</button>
+                <button type="button" data-jump="${start.toFixed(1)}">Смотреть</button>
               </div>
             `;
               })
@@ -1864,21 +1879,21 @@
         $("#timelineLabel").textContent = `${formatDuration(seconds)} / ${formatDuration(state.duration)}`;
         $("#routeKm").textContent = (3.4 + (seconds / Math.max(1, state.duration)) * 16.1).toFixed(1);
         $("#frameId").textContent = `F-${Math.round(seconds * 25)}`;
-        $("#qualityFrame").textContent = `${$("#frameId").textContent} / conf 0.${Math.round(78 + Math.sin(seconds / 6) * 7)}`;
+        $("#qualityFrame").textContent = `${$("#frameId").textContent} / увер. 0.${Math.round(78 + Math.sin(seconds / 6) * 7)}`;
         $("#videoSubtitle").textContent =
           state.reviewMode === "last-minute"
-            ? "Indexed final-minute replay window bound to product/time/route"
-            : "RTSP source bound to product, time, and route";
+            ? "Индексированное окно последней минуты: изделие, время, маршрут"
+            : "RTSP-источник привязан к изделию, времени и маршруту";
         $("#streamState").textContent = state.recording
-          ? "recording clip"
+          ? "запись клипа"
           : video.ended
-            ? "finished"
+            ? "завершено"
             : state.reviewMode === "last-minute"
-              ? "indexed replay"
+              ? "повтор финиша"
               : video.paused
-                ? "paused review"
-                : "live 25 fps";
-        $("#playButton").textContent = video.paused ? "Play" : "Pause";
+                ? "пауза / просмотр"
+                : "эфир 25 к/с";
+        $("#playButton").textContent = video.paused ? "Пуск" : "Пауза";
         renderMapCanvas();
         renderTelemetry();
         renderUserMarks();
@@ -1892,17 +1907,17 @@
         $("#clipCount").textContent = matches.length;
         const added = addedLabelCount();
         $("#labelCount").textContent = matches.reduce((sum, seg) => sum + seg.labels, 0) + added;
-        $("#targetLabel").textContent = added ? `Target object / label +${added}` : "Target object / conf 0.82";
+        $("#targetLabel").textContent = added ? `Объект цели / меток +${added}` : "Объект цели / увер. 0.82";
         $("#snapshotCount").textContent = state.snapshots.length;
         $("#syncDrift").textContent = product.drift;
-        $("#syncButton").textContent = state.sync ? "Sync on" : "Sync off";
-        $("#syncMode").textContent = state.sync ? "master/slave" : "independent";
-        $("#miniA").textContent = `${state.product} cam A / +0.0s`;
-        $("#miniB").textContent = `${state.product} cam B / +3.0s`;
+        $("#syncButton").textContent = state.sync ? "Синхр. вкл" : "Синхр. выкл";
+        $("#syncMode").textContent = state.sync ? "ведущий/ведомые" : "независимо";
+        $("#miniA").textContent = `${state.product} кам. A / +0.0с`;
+        $("#miniB").textContent = `${state.product} кам. B / +3.0с`;
         $("#searchSummary").textContent = `${state.product}, ${areas[state.area]}, ${state.date}`;
         $("#telemetryLog").textContent = state.sync
-          ? "Sync source: master video clock"
-          : "Independent review: telemetry clock unlocked";
+          ? "Источник синхронизации: общие часы видео"
+          : "Независимый просмотр: часы телеметрии отвязаны";
         renderTick();
       }
 
